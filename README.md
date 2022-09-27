@@ -1,0 +1,2 @@
+# LearningRust
+Rust Learning Notes
