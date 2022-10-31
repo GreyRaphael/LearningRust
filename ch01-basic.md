@@ -2,6 +2,7 @@
 
 - [Basic Grammar](#basic-grammar)
   - [Variable](#variable)
+    - [Shadowing](#shadowing)
 
 ## Variable
 
@@ -31,5 +32,29 @@ fn main() {
     println!("y={}", y);
     println!("MAX_PONTS value={}", MAX_PONTS);
     print!("MIN_PONTS value={}", MIN_PONTS);
+}
+```
+
+### Shadowing
+
+可以使用相同名字声明新的变量，新的变量就会shadow(隐藏)之前声明的变量
+- 使用`let`声明的同名新变量，也是immutable
+- 使用`let`声明的同名新变量，可以是不同类型
+
+```rs
+fn main() {
+    let x = 5;
+    // x = x + 1; // error, x is immutable
+    let x = x + 1; // shaowing
+
+    let y = "hello";
+    let y = y.len();
+
+    let z="123456";
+    let z:i32=z.parse().unwrap();
+    
+    println!("x={}", x); // 6
+    println!("y={}", y); // 5
+    println!("z={}", z); // 123456
 }
 ```
