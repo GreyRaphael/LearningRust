@@ -3,6 +3,11 @@
 - [Basic Grammar](#basic-grammar)
   - [Variable](#variable)
     - [Shadowing](#shadowing)
+  - [DataTypes](#datatypes)
+    - [integer value](#integer-value)
+    - [float value](#float-value)
+    - [bool value](#bool-value)
+    - [character value](#character-value)
 
 ## Variable
 
@@ -58,3 +63,53 @@ fn main() {
     println!("z={}", z); // 123456
 }
 ```
+
+## DataTypes
+
+数据类型
+- 标量类型: 代表一个单个的值
+- 复合类型
+
+
+### integer value
+
+- signed: from $-(2^n-1)$, to $2^{n-1}-1$
+- unsigned: from 0 to $2^n-1$
+- arch由计算机架构决定，如果是64位计算机，isize就是i64
+
+| Length  | Signed | Unsigned |
+|---------|--------|----------|
+| 8-bit   | i8     | u8       |
+| 16-bit  | i16    | u16      |
+| 32-bit  | i32    | u32      |
+| 64-bit  | i64    | u64      |
+| 128-bit | i128   | u128     |
+| arch    | isize  | usize    |
+
+除了`Byte`都可以使用类型后缀`98_222u32`, `98_222i32`
+> 即便是在64位操作系统，i32的速度也很快
+
+| Number Literals | Example     |
+|-----------------|-------------|
+| Decimal         | 98_222      |
+| Hex             | 0xff        |
+| Octal           | 0o77        |
+| Binary          | 0b1111_0000 |
+| Byte(u8 only)   | b'A'        |
+
+### float value
+
+- f32
+- f64, 默认情况，现代计算机上f64和f32速度差不多，精度反而更高
+
+### bool value
+
+占用一个Byte
+- true
+- false
+
+### character value
+
+占用4个字节，unicode标量值
+
+范围: `U+0000 ~ U+D7FF`, `U+E000 ~ U+10FFFF`
