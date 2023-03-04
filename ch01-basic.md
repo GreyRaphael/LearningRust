@@ -9,6 +9,7 @@
     - [bool value](#bool-value)
     - [character value](#character-value)
     - [tuple, list, vector](#tuple-list-vector)
+    - [function, expression](#function-expression)
 
 ## Variable
 
@@ -180,3 +181,50 @@ fn main() {
     }
 }
 ```
+
+### function, expression
+
+```rs
+fn main() {
+    func1();
+    func2(10);
+    // 函数不需要定义在main之前
+    // rust不支持函数默认参数
+    println!("{}", func3()); // 10000
+    println!("{}", func4(10)); // 15
+    println!("{}", func5(1)); // 51
+}
+
+fn func1(){
+    println!("func1");
+}
+
+fn func2(x:i32){
+    println!("func2, x={}", x);
+}
+
+fn func3() -> i32{
+    10000
+}
+
+fn func4(x:i32) -> i32{
+    x+5 // 加了分号就是statemetn， 类型是Tuple，与返回值类型不匹配，报错
+}
+
+fn func5(x:i32) -> i32{
+    return x+50;
+}
+```
+
+```rs
+fn main() {
+    let y={ // 花括号说明是表达式
+        let x=1;
+        // x+3; // 加上末尾分号就是语句statement,语句的返回值是空的tuple
+        x+3 // 不加末尾分号就是expression
+    };
+    // let z={let x=6}; // error, 认为是statement
+    println!("{}", y); // 4
+}
+```
+
