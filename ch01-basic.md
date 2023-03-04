@@ -33,7 +33,7 @@ fn main() {
     // x=6;// error
     println!("x={}", x);
     let mut y = 10;
-    y = 100; // error
+    y = 100;
     println!("y={}", y);
     println!("MAX_PONTS value={}", MAX_PONTS);
     print!("MIN_PONTS value={}", MIN_PONTS);
@@ -69,6 +69,24 @@ fn main() {
 数据类型
 - 标量类型: 代表一个单个的值
 - 复合类型
+
+```rs
+fn main() {
+    let x:i32 = 5;
+    // x = x + 1; // error, x is immutable
+    let x:i32 = x + 11; // shaowing
+
+    let y:&str = "hello";
+    let y:usize = y.len();
+
+    let z:&str="123456";
+    let z:i32=z.parse().unwrap();
+    
+    println!("x={}", x); // 6
+    println!("y={}", y); // 5
+    println!("z={}", z); // 123456
+}
+```
 
 
 ### integer value
