@@ -11,6 +11,7 @@
     - [tuple, list, vector](#tuple-list-vector)
     - [function, expression](#function-expression)
     - [if-else](#if-else)
+    - [loop, while, for](#loop-while-for)
 
 ## Variable
 
@@ -248,3 +249,64 @@ fn main() {
 }
 ```
 
+### loop, while, for
+
+```rs
+fn main() {
+    let mut counter=0;
+
+    // 通过break跳出
+    loop {
+        counter+=1;
+        println!("counter={}", counter);
+        if counter==5{
+            break;
+        }
+    }
+
+    let mut x=0;
+    while x<5 {
+        x+=1;
+        println!("x={}", x);
+    }
+
+    // 1..6表示range
+    for i in 1..6 {
+        println!("i={}", i);
+    }
+
+    // 逆序
+    for i in (1..6).rev() {
+        println!("i={}", i);
+    }
+}
+```
+
+
+```rs
+fn main() {
+    let mut counter = 0;
+
+    // loop作为表达式
+    let result = loop {
+        counter += 1;
+        if counter == 5 {
+            break 2 * counter;
+        }
+    };
+
+    println!("counter={}", counter); // 5
+    println!("result={}", result); // 10
+}
+```
+
+```rs
+fn main() {
+    let l = [1, 2, 3, 4, 5];
+    let t=(10, 1.2, 'h', 1);
+    for i in l.iter() {
+        println!("value={}", i);
+    }
+    // 可以遍历Array, 无法遍历Tuple
+}
+```
