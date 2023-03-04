@@ -334,3 +334,37 @@ fn main() {
 2. 每个值同时只能有一个所有者
 3. 当所有者超过作用域(Scope)的时候，该值将被删除
 
+```rs
+fn main() {
+    let x = 5;
+    let y = x;
+    println!("{}", x); // 5, 因为x在stack分配，没有所有权的问题，在heap上分配才有所有权的问题
+    println!("{}", y); // 5
+    let s1 = String::from("hello");
+    let s2 = s1;
+    // println!("{}", s1); // error, 因为String在heap上分配，s1所有权转移到了s2(move), s1被Drop
+    println!("{}", s2);
+    
+    let s3=s2.clone(); // 使用clone就会在heap上面再分配一块内存给s3，相当于是deep copy
+    println!("{}", s2);
+    println!("{}", s3);
+}
+```
+
+概念:
+- 在stack上面复制数据叫做copy
+- 在heap上面复制数据叫做clone
+
+Copy Trait: 用于能够完全存放在stack上面的数据类型
+- 如果一个类型实现了Copy Trait, 那么旧变量在赋值后，仍然能够使用，比如上面的x
+- 如果一个类型或者该类型的一部分实现了Drop Trait，那么该类型无法实现Copy Trait
+
+拥有Copy Trait的类型:
+- 任何简单标量的组合类型都是可以Copy的: integer, float, bool, char
+- 需要分配内存或者某种资源的都不是Copy的
+  
+1. Tuple里面所有元素都是Copy的，那么就是Copy的: (i32, f64);
+2. Tuple里面存在不是Copy的，那么就不是Copy的: (i32, String)
+
+
+
