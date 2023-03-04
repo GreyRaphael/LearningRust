@@ -16,6 +16,7 @@
     - [loop, while, for](#loop-while-for)
   - [Ownership](#ownership)
     - [ownership with function](#ownership-with-function)
+    - [reference](#reference)
 
 ## Variable
 
@@ -423,3 +424,118 @@ fn take_and_giveback(mut str:String)->String {
 - 把一个值赋给其他变量时就会发生移动
 - 当一个包含heap数据的变量离开作用域时，它的值就会被drop函数清理，除非数据所有权移动到另一个变量上
 
+### reference
+
+使用完s1，s1的所有权发生转移
+
+```rs
+fn main() {
+    let s1 = String::from("hello");
+    println!("{}", s1);
+    let (s2, len) = take_and_giveback(s1);
+
+    // println!("{}, {}", s1, len); // error, s1丧失所有权
+    println!("{}, {}", s2, len);
+}
+
+fn take_and_giveback(str: String) -> (String, usize) {
+    let length = str.len();
+    (str, length) // length的类型是usize
+}
+```
+
+采用Reference, 使用完s1，s1的所有权发生不发生转移
+
+```rs
+fn main() {
+    let s1 = String::from("hello");
+    println!("{}", s1);
+    let len = calc_length(&s1);
+    println!("{}", s1); // 使用了s1的值，但是s1的所有权在函数中未发生转移
+
+    println!("{}", len); //5
+}
+
+fn calc_length(str: &String) -> usize { 
+    str.len()
+}
+```
+
+```rs
+// 可变引用
+fn main() {
+    let mut s1 = String::from("hello");
+    println!("{}", s1);
+    let len = calc_length(&s1);
+    println!("{}", s1); // 使用了s1的值，但是s1的所有权在函数中未发生转移
+
+    println!("{}", len); //5
+}
+
+fn calc_length(str: &mut String) -> usize { //表示引用的内容可以被修改
+    str.len()
+}
+```
+
+可变引用的限制1：在特定的作用域内，对于某一块数据，只能有一个**可变引用**
+> 在编译的时候，防止数据竞争
+
+```rs
+fn main() {
+    let mut s = String::from("hello");
+    let s1=&mut s;
+    // let s2=&mut s;// error, 只能有一个可变引用
+
+    println!("{},{}", s1, s2);
+}
+```
+
+数据竞争发生的形式:
+- 两个或者多个指针同时访问同一个数据
+- 至少有一个指针用于写入数据
+- 没有使用任何机制来同步对数据的访问
+
+可以通过创建新的作用域，来允许非同时的创建多个**可变引用**
+
+```rs
+fn main() {
+    let mut s = String::from("hello");
+    {
+      let s1=&mut s;
+      println!("{}", s1);
+    }
+
+    let s2=&mut s;// error, 只能有一个可变引用
+    println!("{}", s1);
+}
+```
+
+可变引用的限制2: 不可以同时拥有一个**可变引用**  和 一个**不可变引用**
+> 多个**不可变引用**是允许的
+
+```rs
+fn main() {
+    let mut s = String::from("hello");
+    let s1 = &s;
+    let s2 = &s;
+    // let s3 = &mut s; // error
+
+    println!("{},{},{}", s1, s2, s3);
+}
+```
+
+悬空指针(Dangling Reference): 一个指针引用了内存中的某个地址，而这块内存可能已经释放并分配给其他人使用
+> Rust编译器能够保证引用永远都不是悬空指针：如果你引用了某些数据，编译器将保证在引用离开作用域之前，数据不会被销毁
+>
+
+```rs
+// 无法编译通过，
+fn main() {
+    let r=dangle();
+}
+
+fn dangle()->&String {
+    let str=String::from("hello");
+    &str
+} // str出了这一块就被销毁了，那么r将引用一个被销毁的数据，这就是悬空指针，rust编译器不允许
+```
