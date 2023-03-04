@@ -9,6 +9,7 @@
     - [bool value](#bool-value)
     - [character value](#character-value)
     - [tuple, list, vector](#tuple-list-vector)
+    - [String](#string)
   - [Statements](#statements)
     - [function, expression](#function-expression)
     - [if-else](#if-else)
@@ -183,6 +184,17 @@ fn main() {
     {
         println!("{}", i)
     }
+}
+```
+
+### String
+
+```rs
+fn main() {
+    // String在heap上面分配
+    let mut s1 = String::from("hello");
+    s1.push_str(",world");
+    println!("{}", s1); // hello,world
 }
 ```
 
