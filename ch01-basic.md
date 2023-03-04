@@ -15,6 +15,7 @@
     - [if-else](#if-else)
     - [loop, while, for](#loop-while-for)
   - [Ownership](#ownership)
+    - [ownership with function](#ownership-with-function)
 
 ## Variable
 
@@ -367,4 +368,58 @@ Copy Trait: 用于能够完全存放在stack上面的数据类型
 2. Tuple里面存在不是Copy的，那么就不是Copy的: (i32, String)
 
 
+
+### ownership with function
+
+> 将值传递给函数, Copy Trait发生复制，Drop Trait发生所有权移动
+
+```rs
+fn main() {
+    let s=String::from("hello");
+    take_ownership(s);
+    // println!("{}", s); // error
+
+    let x=1;
+    make_copy(x);
+    println!("{}", x); // x still work
+}
+
+fn take_ownership(str:String) {
+    println!("take {}", str);
+}// str在这里被Drop
+
+fn make_copy(num:i32) {
+    println!("make copy {}", num)
+}
+```
+
+> 函数返回的时候，也会发生所有权的移动
+
+```rs
+fn main() {
+    let s1=give_ownership();
+    println!("{}", s1);
+    let s2=String::from("hello");
+    println!("{}", s2); 
+    let s3=take_and_giveback(s2);
+    // println!("{}", s2); // s2丧失所有权
+    println!("{}", s3);
+}
+
+
+fn give_ownership()->String {
+    let str=String::from("hello");
+    str
+}
+
+
+fn take_and_giveback(mut str:String)->String {
+    str.push_str(",world");
+    str
+}
+```
+
+一个变量的所有权总是遵循同样的模式
+- 把一个值赋给其他变量时就会发生移动
+- 当一个包含heap数据的变量离开作用域时，它的值就会被drop函数清理，除非数据所有权移动到另一个变量上
 
