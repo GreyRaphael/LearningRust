@@ -9,9 +9,11 @@
     - [bool value](#bool-value)
     - [character value](#character-value)
     - [tuple, list, vector](#tuple-list-vector)
+  - [Statements](#statements)
     - [function, expression](#function-expression)
     - [if-else](#if-else)
     - [loop, while, for](#loop-while-for)
+  - [Ownership](#ownership)
 
 ## Variable
 
@@ -184,6 +186,8 @@ fn main() {
 }
 ```
 
+## Statements
+
 ### function, expression
 
 ```rs
@@ -310,3 +314,11 @@ fn main() {
     // 可以遍历Array, 无法遍历Tuple
 }
 ```
+
+## Ownership
+
+所有权规则:
+1. 每个值都有一个变量，这个变量是该值的所有者
+2. 每个值同时只能有一个所有者
+3. 当所有者超过作用域(Scope)的时候，该值将被删除
+
