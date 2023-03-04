@@ -10,6 +10,7 @@
     - [character value](#character-value)
     - [tuple, list, vector](#tuple-list-vector)
     - [function, expression](#function-expression)
+    - [if-else](#if-else)
 
 ## Variable
 
@@ -225,6 +226,25 @@ fn main() {
     };
     // let z={let x=6}; // error, 认为是statement
     println!("{}", y); // 4
+}
+```
+
+### if-else
+
+```rs
+fn main() {
+    let x = 6;
+    if x % 3 == 0 {
+        print!("arm 1");
+    } else if x % 3 == 1 {
+        print!("arm 2");
+    } else {
+        print!("arm 3");
+    }
+
+    let num = if x % 2 == 0 { 100 } else { 200 }; 
+    // let num = if x % 2 == 0 { 100 } else { "hello" }; // error, 两个分支必须是同种类型
+    println!("num={}", num); // 100
 }
 ```
 
