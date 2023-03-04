@@ -17,6 +17,7 @@
   - [Ownership](#ownership)
     - [ownership with function](#ownership-with-function)
     - [reference](#reference)
+    - [slice](#slice)
 
 ## Variable
 
@@ -85,10 +86,10 @@ fn main() {
     // x = x + 1; // error, x is immutable
     let x:i32 = x + 11; // shaowing
 
-    let y:&str = "hello";
+    let y:&str1 = "hello";
     let y:usize = y.len();
 
-    let z:&str="123456";
+    let z:&str1="123456";
     let z:i32=z.parse().unwrap();
     
     println!("x={}", x); // 6
@@ -385,9 +386,9 @@ fn main() {
     println!("{}", x); // x still work
 }
 
-fn take_ownership(str:String) {
-    println!("take {}", str);
-}// str在这里被Drop
+fn take_ownership(str1:String) {
+    println!("take {}", str1);
+}// str1在这里被Drop
 
 fn make_copy(num:i32) {
     println!("make copy {}", num)
@@ -409,14 +410,14 @@ fn main() {
 
 
 fn give_ownership()->String {
-    let str=String::from("hello");
-    str
+    let str1=String::from("hello");
+    str1
 }
 
 
-fn take_and_giveback(mut str:String)->String {
-    str.push_str(",world");
-    str
+fn take_and_giveback(mut str1:String)->String {
+    str1.push_str(",world");
+    str1
 }
 ```
 
@@ -438,9 +439,9 @@ fn main() {
     println!("{}, {}", s2, len);
 }
 
-fn take_and_giveback(str: String) -> (String, usize) {
-    let length = str.len();
-    (str, length) // length的类型是usize
+fn take_and_giveback(str1: String) -> (String, usize) {
+    let length = str1.len();
+    (str1, length) // length的类型是usize
 }
 ```
 
@@ -456,8 +457,8 @@ fn main() {
     println!("{}", len); //5
 }
 
-fn calc_length(str: &String) -> usize { 
-    str.len()
+fn calc_length(str1: &String) -> usize { 
+    str1.len()
 }
 ```
 
@@ -472,8 +473,8 @@ fn main() {
     println!("{}", len); //5
 }
 
-fn calc_length(str: &mut String) -> usize { //表示引用的内容可以被修改
-    str.len()
+fn calc_length(str1: &mut String) -> usize { //表示引用的内容可以被修改
+    str1.len()
 }
 ```
 
@@ -535,7 +536,12 @@ fn main() {
 }
 
 fn dangle()->&String {
-    let str=String::from("hello");
-    &str
-} // str出了这一块就被销毁了，那么r将引用一个被销毁的数据，这就是悬空指针，rust编译器不允许
+    let str1=String::from("hello");
+    &str1
+} // str1出了这一块就被销毁了，那么r将引用一个被销毁的数据，这就是悬空指针，rust编译器不允许
 ```
+
+### slice
+
+> 不持有所有权的数据类型: slice
+
