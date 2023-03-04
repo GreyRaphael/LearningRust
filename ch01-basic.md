@@ -131,3 +131,13 @@ fn main() {
 占用4个字节，unicode标量值
 
 范围: `U+0000 ~ U+D7FF`, `U+E000 ~ U+10FFFF`
+
+```rs
+fn main() {
+    let x='a';
+    let y='😂';
+    println!("x={}", x);
+    println!("y={}", y);
+}
+```
+
