@@ -8,6 +8,7 @@
     - [float value](#float-value)
     - [bool value](#bool-value)
     - [character value](#character-value)
+    - [tuple, list, vector](#tuple-list-vector)
 
 ## Variable
 
@@ -141,3 +142,41 @@ fn main() {
 }
 ```
 
+### tuple, list, vector
+
+```rs
+fn main() {
+    // Tuple: 元素类型可以不同
+    let tup:(i32, f64,u8)=(100, 1.2, 2);
+    let t=(1000, 1.3, 5);
+    let (x, y, z)=t;
+    println!("{},{},{}", tup.0, tup.1, tup.2);
+    println!("{},{},{}", x, y, z);
+
+    // Array, 元素类型相同，长度不许改变，数据存放在stack上
+    let l=[1, 2, 3, 4, 5]; // immutable
+    // 显式说是类型是f64,共3个元素
+    let mut lx:[f64; 3]=[1.1, 2.2, 3.3]; // mutable
+    lx[2]=20.3;
+    // 重复多少次元素
+    let ly=[2;3]; // [2, 2, 2]
+    println!("{}", l[2]);
+    println!("{}", lx[2]); // 20.3
+
+    // Vector, 元素类型相同，长度可以改变
+    let mut v : Vec<i32> = Vec::new();
+    v.push(11);
+    v.push(22);
+    v.push(33);
+    for i in v 
+    { 
+        print!("{} ",i); 
+    } 
+
+    let v2=vec![111, 222, 333]; // create by macro
+    for i in v2
+    {
+        println!("{}", i)
+    }
+}
+```
