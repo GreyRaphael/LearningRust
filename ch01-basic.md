@@ -453,6 +453,7 @@ fn take_and_giveback(str1: String) -> (String, usize) {
 ```
 
 采用Reference, 使用完s1，s1的所有权发生不发生转移
+> <img src="resources/ch01-reference01.jpg" width="600">
 
 ```rs
 fn main() {
@@ -464,8 +465,8 @@ fn main() {
     println!("{}", len); //5
 }
 
-fn calc_length(str1: &String) -> usize { 
-    str1.len()
+fn calc_length(s: &String) -> usize { 
+    s.len()
 }
 ```
 
@@ -534,18 +535,20 @@ fn main() {
 
 悬空指针(Dangling Reference): 一个指针引用了内存中的某个地址，而这块内存可能已经释放并分配给其他人使用
 > Rust编译器能够保证引用永远都不是悬空指针：如果你引用了某些数据，编译器将保证在引用离开作用域之前，数据不会被销毁
->
+
+s1离开作用域，对应的heap内存数据被销毁，但是返回了s1的引用s, s这个引用是失效的
+> <img src="resources/ch01-reference01.jpg" width="600">
 
 ```rs
 // 无法编译通过，
 fn main() {
-    let r=dangle();
+    let s=dangle();
 }
 
 fn dangle()->&String {
-    let str1=String::from("hello");
-    &str1
-} // str1出了这一块就被销毁了，那么r将引用一个被销毁的数据，这就是悬空指针，rust编译器不允许
+    let s1=String::from("hello");
+    &s1
+} // s1出了这一块就被销毁了，那么r将引用一个被销毁的数据，这就是悬空指针，rust编译器不允许
 ```
 
 引用的规则
