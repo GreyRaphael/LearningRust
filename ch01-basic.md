@@ -18,6 +18,7 @@
     - [ownership with function](#ownership-with-function)
     - [reference](#reference)
     - [slice](#slice)
+    - [other types of slice](#other-types-of-slice)
 
 ## Variable
 
@@ -560,5 +561,87 @@ fn dangle()->&String {
 
 ### slice
 
-> 不持有所有权的数据类型: slice
+> 除了reference, 不持有所有权的数据类型: slice
+
+```rs
+fn main() {
+    let s = String::from("hello world");
+    let s1 = &s[..5]; // hello
+    let s2 = &s[6..]; // world
+    let s3:&str = &s[0..4]; // hell
+    let whole_view1 = &s[0..s.len()]; // hello world
+    let whole_view2 = &s[..]; // hello world
+
+    let literal_str="hello grey";
+}
+
+```
+
+上文`&str`类型就是slice, `&str`是不可变引用
+> 字符串字面值(比如上文literal_str)本质就是sliec, 即`&str`，直接存在在二进制程序中；因为`&str`是不可变引用，所以字符串字面值是不可变的。
+
+```rs
+fn main() {
+    let mut s1 = String::from("hello grey");
+    let index = first_world_index(&s1);
+    s1.clear(); // 要求s1是mut
+    println!("{}", index); // s1被清空，index仍然有效，如果后文索引[index]，会出现问题, 应该保证index与s1的同步性
+
+    let mut s2 = String::from("james moriaty");
+    let first_w = first_world(&s2);
+    // s2.clear(); // error, 因为前文s2已经有一个不可变引用s，而s2.clear()使用的是可变引用，所以报错
+    println!("{}", first_w);
+}
+
+fn first_world_index(s: &String) -> usize {
+    let bytes = s.as_bytes();
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return i;
+        }
+    }
+    return s.len();
+}
+
+fn first_world(s: &String) -> &str {
+    let bytes = s.as_bytes();
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &s[..i];
+        }
+    }
+    return &s[..];
+}
+```
+
+一般将`&str`作为参数类型， 这样既可以接受`&String`类型，又可以接收`&str`类型
+- 如果传入的是`&String`, 会先创建一个`&str`然后进行后续处理
+- 如果传入的是`&str`，直接进行处理
+
+```rs
+fn main() {
+    let mut s2 = String::from("james moriaty");
+    let first_w = first_world(&s2); // &String
+    println!("{}", first_w);
+    
+    let first_w2=first_world(&s2[..]); //&str
+    println!("{}", first_w2);
+
+    let s3="tim cook";
+    let first_w3=first_world(s3); // &str
+    println!("{}", first_w3); // tim
+}
+
+fn first_world(s: &str) -> &str {
+    let bytes = s.as_bytes();
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &s[..i];
+        }
+    }
+    return &s[..];
+}
+```
+
+### other types of slice
 
