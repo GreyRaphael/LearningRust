@@ -2,6 +2,7 @@
 
 - [Data Structure](#data-structure)
   - [struct](#struct)
+    - [struct method](#struct-method)
 
 ## struct
 
@@ -116,3 +117,82 @@ fn area(rect: &Rectangle) -> u32 {
     rect.width * rect.height
 }
 ```
+
+### struct method
+
+> 参数可以是不可变引用`&self`， 也可以是可变引用`&mut self`，也可以获取其所有权`self`,和其他参数的用法一样
+
+```rs
+fn main() {
+    let r = Rectangle {
+        width: 20,
+        height: 30,
+    };
+    println!("{}", r.area());
+
+    println!("{:#?}", r);
+}
+
+#[derive(Debug)] // 通过这一句能够实现打印struct
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+// 使用impl实现方法，方法第一个参数是self
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+```
+
+关联函数，类似C++里面的静态方法
+
+```rs
+fn main() {
+    let r1 = Rectangle {
+        width: 20,
+        height: 30,
+    };
+    let r2 = Rectangle {
+        width: 10,
+        height: 20,
+    };
+    println!("{}", r1.can_hold(&r2)); //true
+
+    let square1 = Rectangle::square(10);
+    println!("{},{}", square1.width, square1.height); // 10,10
+}
+
+#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    // 方法：通过.来访问的函数
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        // 判断一个长方形是否能够容纳另一个长方形
+        self.width > other.width && self.height > other.height
+    }
+
+    // 关联函数，通过::来使用的函数
+    fn square(size: u32) -> Rectangle {
+        Rectangle {
+            width: size,
+            height: size,
+        }
+    }
+}
+
+impl Rectangle {
+    // 同一个struct的方法可以放在多个impl里面
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+```
+
+
