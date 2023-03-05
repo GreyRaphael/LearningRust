@@ -365,9 +365,8 @@ Copy Trait: 用于能够完全存放在stack上面的数据类型
 拥有Copy Trait的类型:
 - 任何简单标量的组合类型都是可以Copy的: integer, float, bool, char
 - 需要分配内存或者某种资源的都不是Copy的
-  
-1. Tuple里面所有元素都是Copy的，那么就是Copy的: (i32, f64);
-2. Tuple里面存在不是Copy的，那么就不是Copy的: (i32, String)
+  1. Tuple里面所有元素都是Copy的，那么就是Copy的: (i32, f64);
+  2. Tuple里面存在不是Copy的，那么就不是Copy的: (i32, String)
 
 
 
