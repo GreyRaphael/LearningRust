@@ -3,6 +3,7 @@
 - [Data Structure](#data-structure)
   - [struct](#struct)
     - [struct method](#struct-method)
+  - [enum](#enum)
 
 ## struct
 
@@ -195,4 +196,5 @@ impl Rectangle {
 }
 ```
 
+## enum
 
