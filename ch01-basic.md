@@ -339,6 +339,14 @@ fn main() {
 
 ```rs
 fn main() {
+    let mut s=String::from("hello");
+    s.push_str(",world");
+    println!("{}", s);
+} // s走出作用域(Scope)，调用drop函数，清理heap上面的内存
+```
+
+```rs
+fn main() {
     let x = 5;
     let y = x;
     println!("{}", x); // 5, 因为x在stack分配，没有所有权的问题，在heap上分配才有所有权的问题
