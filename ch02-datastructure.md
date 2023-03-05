@@ -89,3 +89,30 @@ fn main() {
     let origin = Point(0, 0, 0);
 }
 ```
+
+调试struct
+
+```rs
+fn main() {
+    let r = Rectangle {
+        width: 20,
+        height: 30,
+    };
+    println!("{}", area(&r));
+
+    // print Rectangle
+    // println!("{}", r); // error
+    println!("{:?}", r); // format 1, Rectangle { width: 20, height: 30 }
+    println!("{:#?}", r); // format 2
+}
+
+#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+fn area(rect: &Rectangle) -> u32 {
+    rect.width * rect.height
+}
+```
