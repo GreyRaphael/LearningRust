@@ -561,21 +561,22 @@ fn dangle()->&String {
 
 ### slice
 
-> 除了reference, 不持有所有权的数据类型: slice
+> 除了reference, 不持有所有权的数据类型: slice; slice本质是指向某一段数据的指针
 
 ```rs
 fn main() {
     let s = String::from("hello world");
     let s1 = &s[..5]; // hello
-    let s2 = &s[6..]; // world
+    let world = &s[6..]; // world
     let s3:&str = &s[0..4]; // hell
     let whole_view1 = &s[0..s.len()]; // hello world
     let whole_view2 = &s[..]; // hello world
 
     let literal_str="hello grey";
 }
-
 ```
+
+> <img src="resources/ch01-slice01.jpg" width="300">
 
 上文`&str`类型就是slice, `&str`是不可变引用
 > 字符串字面值(比如上文literal_str)本质就是sliec, 即`&str`，直接存在在二进制程序中；因为`&str`是不可变引用，所以字符串字面值是不可变的。
