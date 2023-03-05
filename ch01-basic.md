@@ -18,7 +18,6 @@
     - [ownership with function](#ownership-with-function)
     - [reference](#reference)
     - [slice](#slice)
-    - [other types of slice](#other-types-of-slice)
 
 ## Variable
 
@@ -565,6 +564,13 @@ fn dangle()->&String {
 
 ```rs
 fn main() {
+    let li = [1, 2, 3, 4, 5];// type is [i32, 5]
+    let slice = &li[1..3]; // [2, 3], type is &[i32]
+}
+```
+
+```rs
+fn main() {
     let s = String::from("hello world");
     let s1 = &s[..5]; // hello
     let world = &s[6..]; // world
@@ -643,6 +649,4 @@ fn first_world(s: &str) -> &str {
     return &s[..];
 }
 ```
-
-### other types of slice
 
