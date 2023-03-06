@@ -7,6 +7,7 @@
     - [First Example](#first-example)
     - [Cargo](#cargo)
   - [Guess Game](#guess-game)
+  - [Code management](#code-management)
 
 ## Preparation
 
@@ -111,3 +112,54 @@ fn main() {
     }
 }
 ```
+
+## Code management
+
+模块系统(从上往下)
+- Package: 用于 build, test, share crate
+- Crate: 用于产生library, binary
+- Module: 配合`use`使用，控制代码的组织、作用域、私有路径
+- Path: 为struct, function, module命名的方式
+
+Crate类型：
+- binary
+- library
+
+Crate Root
+- 是源代码文件，表示Rust编译器从这里开始，组成你的Crate的根Module
+
+Package包含
+- Cargo.toml, 描述如何构建这些Crates
+- 包含0个或者1个 library crate
+- 包含任意数量的binary crate
+- 但是必须至少包含一个crate(binary or library)
+
+```bash
+$ cargo new project1
+.
+├── Cargo.toml
+├── src
+│   └── main.rs # 默认是binary crate的crate root，crate名于package名相同
+```
+
+如果有library
+
+```bash
+.
+├── Cargo.toml
+└── src
+    ├── main.rs
+    └── lib.rs # package包含一个libray crate, 作为library crate的crate root, crate名与package名相同
+```
+
+Cargo会把crate root文件交给rustc来build library or binary
+
+一个Package可以有多个binary crate:
+- 文件放在src/bin
+- 每个文件都是单独的binary crate
+
+Module:
+- 在一个Crate内，将代码进行分组
+- 控制项目的public, private
+- 建立modulde使用`mod`
+- 可以包含其他子项，比如sruct, enum, trait, function...
