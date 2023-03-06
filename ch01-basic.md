@@ -396,6 +396,38 @@ fn value_in_cents(coin: Coin) -> u8 {
 }
 ```
 
+`Option<T>` with `match`
+
+```rs
+fn main() {
+    let v1 = Some(65);
+    let v2 = plus_one(v1);
+
+    println!("{}", v2.unwrap());
+}
+
+fn plus_one(x: Option<i32>) -> Option<i32> {
+    // match 匹配必须穷举所有可能， 少写了None会报错
+    match x {
+        None => None, 
+        Some(i) => Some(i + 1),
+    }
+}
+```
+
+```rs
+fn main() {
+    let v = 0u8;
+    match v {
+        1 => println!("one"),
+        2 => println!("two"),
+        3 => println!("three"),
+        // 原则上u8应该256个数，需要穷举所有，现在只需要穷举1,2,3，所以用通配符_代替其他的
+        _ => (),
+    }
+}
+```
+
 ## Ownership
 
 所有权规则:
