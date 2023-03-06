@@ -264,3 +264,31 @@ enum Message {
 }
 ```
 
+implement method for enum
+
+```rs
+fn main() {
+    let q = Message::Quit;
+    let m = Message::Move { x: 10, y: 20 };
+    let w = Message::Write(String::from("hello"));
+    let red = Message::ChangeColor(255, 0, 0);
+
+    red.call();
+}
+
+
+enum Message {
+    // 变体的类型可以是任意类型，也可以是struct
+    Quit,
+    Move { x: i32, y: i32 }, // 类型为匿名struct
+    Write(String),
+    ChangeColor(u8, u8, u8),
+}
+
+impl Message {
+    fn call(&self) {
+        
+    }
+}
+```
+
