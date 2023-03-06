@@ -231,6 +231,7 @@ pub fn eat_at_restaurant() {
 ```
 
 ```rs
+// src/lib.rs
 fn serve_order() {}
 
 mod back_of_house {
@@ -243,5 +244,47 @@ mod back_of_house {
     }
 
     fn cook_order() {}
+}
+```
+
+struct:
+- `pub struct`将struct设置成public
+- struct里面字段默认是private, 除了`pub struct`还得单独设置里面字段的可见性
+
+```rs
+// src/lib.rs
+mod back_of_house {
+    pub struct Breakfast {
+        pub toast: String,
+        fruit: String, // private
+    }
+}
+```
+
+```rs
+// src/lib.rs
+mod back_of_house {
+    pub enum Appetizer {
+        // enum前面添加pub，里面的字段都是pub
+        Sourp,
+        Salad,
+    }
+
+    pub struct Breakfast {
+        pub toast: String,
+        fruit: String, // private
+    }
+
+    impl Breakfast {
+        pub fn summer(toast:&str) ->Breakfast{
+            Breakfast { toast: String::from(toast), fruit: String::from("apple") },
+        }
+    }
+}
+
+pub fn eat_at_restaurant() {
+    let mut meal=back_of_house::Breakfast::summer("Rye");
+    meal.toast=String::from("Wheat");
+    // meal.fruit=String::from("Peach");// error, private
 }
 ```
