@@ -198,3 +198,69 @@ impl Rectangle {
 
 ## enum
 
+```rs
+fn main() {
+    let four = IpAddrKind::V4;
+    let six = IpAddrKind::V6;
+
+    route(four);
+    route(six);
+    route(IpAddrKind::V4);
+
+    // enum in struct
+    let home = IpAddr {
+        kind: IpAddrKind::V4,
+        address: String::from("127.0.0.1"),
+    };
+    let loopback = IpAddr {
+        kind: IpAddrKind::V6,
+        address: String::from("::1"),
+    };
+}
+
+enum IpAddrKind {
+    V4,
+    V6,
+}
+
+struct IpAddr {
+    kind: IpAddrKind,
+    address: String,
+}
+
+fn route(ip_kind: IpAddrKind) {}
+```
+
+```rs
+fn main() {
+    let home = NewIpAddr2::V4(127, 0, 0, 1);
+    let loopbck = NewIpAddr2::V6(String::from("::1"));
+
+    let q = Message::Quit;
+    let m = Message::Move { x: 10, y: 20 };
+    let w = Message::Write(String::from("hello"));
+    let red = Message::ChangeColor(255, 0, 0);
+}
+
+enum NewIpAddr1 {
+    // enum里面每个成员叫做变体
+    // 优点1:不需要额外的struct来存储数据
+    V4(String),
+    V6(String),
+}
+
+enum NewIpAddr2 {
+    // 优点2:每个变体可以拥有不同的类型
+    V4(u8, u8, u8, u8),
+    V6(String),
+}
+
+enum Message {
+    // 变体的类型可以是任意类型，也可以是struct
+    Quit,
+    Move { x: i32, y: i32 }, // 类型为匿名struct
+    Write(String),
+    ChangeColor(u8, u8, u8),
+}
+```
+
