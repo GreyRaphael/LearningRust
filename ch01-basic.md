@@ -15,6 +15,7 @@
     - [if-else](#if-else)
     - [loop, while, for](#loop-while-for)
     - [match](#match)
+    - [`if let`](#if-let)
   - [Ownership](#ownership)
     - [ownership with function](#ownership-with-function)
     - [reference](#reference)
@@ -424,6 +425,42 @@ fn main() {
         3 => println!("three"),
         // 原则上u8应该256个数，需要穷举所有，现在只需要穷举1,2,3，所以用通配符_代替其他的
         _ => (),
+    }
+}
+```
+
+### `if let`
+
+```rs
+fn main() {
+    let v = Some(0u8);
+
+    // if let 和这个match等价，只处理一个分支的情况，放弃了穷举的可能
+    match v {
+        Some(3) => println!("three"),
+        _ => (),
+    }
+
+    if let Some(3) = v {
+        println!("three");
+    }
+}
+```
+
+```rs
+fn main() {
+    let v = Some(0u8);
+
+    // if let 和这个match等价，只处理两个分支的情况
+    match v {
+        Some(3) => println!("three"),
+        _ => println!("others"),
+    }
+
+    if let Some(3) = v {
+        println!("three");
+    } else{
+        println!("others");
     }
 }
 ```
