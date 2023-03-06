@@ -14,6 +14,7 @@
     - [function, expression](#function-expression)
     - [if-else](#if-else)
     - [loop, while, for](#loop-while-for)
+    - [match](#match)
   - [Ownership](#ownership)
     - [ownership with function](#ownership-with-function)
     - [reference](#reference)
@@ -327,6 +328,71 @@ fn main() {
         println!("value={}", i);
     }
     // 可以遍历Array, 无法遍历Tuple
+}
+```
+
+### match
+
+```rs
+fn main() {
+    let v = Coin::Quarter;
+    println!("{}", value_in_cents(v)); // 25
+}
+
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter,
+}
+
+fn value_in_cents(coin: Coin) -> u8 {
+    match coin {
+        Coin::Penny => {
+            // 多行代码的情况
+            println!("Penny!");
+            1
+        },
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter => 25,
+    }
+}
+```
+
+```rs
+fn main() {
+    let v = Coin::Quarter(UsState::Alaska);
+    println!("{}", value_in_cents(v)); // 25
+}
+
+#[derive(Debug)]
+enum UsState {
+    Alabama,
+    Alaska,
+}
+
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(UsState),
+}
+
+fn value_in_cents(coin: Coin) -> u8 {
+    match coin {
+        Coin::Penny => {
+            println!("Penny!");
+            1
+        }
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter(state) => {
+            // 拿到Quater里面存的值
+            println!("State quarter from {:?}", state);
+            25
+        }
+    }
 }
 ```
 
