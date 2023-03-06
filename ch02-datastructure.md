@@ -4,6 +4,7 @@
   - [struct](#struct)
     - [struct method](#struct-method)
   - [enum](#enum)
+    - [`Option<T>`](#optiont)
 
 ## struct
 
@@ -292,3 +293,34 @@ impl Message {
 }
 ```
 
+### `Option<T>`
+
+> 表示某个值可能存在或者不存在的情况
+
+```rs
+// 因为是prelude, 所以 Option<T>, Some, None可以直接使用
+enum Option<T> {
+    Some(T),
+    None,
+}
+```
+
+```rs
+fn main() {
+    let v1 = Some(5);
+    let v2 = Some("hello");
+    let v3: Option<i32> = None; // 需要显示指定None类型
+}
+```
+
+> `Option<T>`和`T`是不同类型，不能把`Option<T>`直接当作是`T`
+
+```rs
+fn main() {
+    let v1 = Some(5);
+    let v2: i32 = 8;
+    // let sum = v1 + v2; // error
+    let sum = v1.unwrap() + v2;
+    println!("{}", sum);
+}
+```
