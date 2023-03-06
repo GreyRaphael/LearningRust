@@ -8,6 +8,7 @@
     - [Cargo](#cargo)
   - [Guess Game](#guess-game)
   - [Code management](#code-management)
+    - [Path](#path)
 
 ## Preparation
 
@@ -162,7 +163,9 @@ Module:
 - 在一个Crate内，将代码进行分组
 - 控制项目的public, private
 - 建立modulde使用`mod`
-- 可以包含其他子项，比如sruct, enum, trait, function...
+- 可以包含其他条目，比如sruct, enum, trait, function...，默认都是`private`
+- 父级模块无法访问子模块的private
+- 子模块可以使用所有祖先模块的所有条目
 
 ```rs
 // src/lib.rs
@@ -192,4 +195,53 @@ crate # crate root
         ├── take_order
         ├── serve_order
         └──take_payment
+```
+
+### Path
+
+- 绝对路径: 从crate root开始，使用crate名或者字面值`crate`
+- 相对路径：从当前路劲开始，self, super(上一级)或者当前模块的标识符
+- 标识符以`::`分割
+
+```rs
+// src/lib.rs
+mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_waitlist() {}
+        fn seat_at_table() {}
+    }
+
+    mod serving {
+        fn take_order() {}
+        fn serve_order() {}
+
+        fn take_payment() {}
+    }
+}
+
+
+pub fn eat_at_restaurant() {
+    // 绝对路径调用, recommended
+    // 虽然front_of_house没有使用pub修饰，但是因为都是同一个文件根级
+    crate::front_of_house::hosting::add_to_waitlist();
+    // crate::front_of_house::serving::serve_order(); // error, serving is private
+    // 相对路径调用
+    front_of_house::hosting::seat_at_table();
+}
+```
+
+```rs
+fn serve_order() {}
+
+mod back_of_house {
+    fn fix_incorrect_order() {
+        cook_order();
+        // 相对调用
+        super::serve_order();
+        // 绝对调用
+        crate::serve_order();
+    }
+
+    fn cook_order() {}
+}
 ```
