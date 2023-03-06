@@ -163,3 +163,33 @@ Module:
 - 控制项目的public, private
 - 建立modulde使用`mod`
 - 可以包含其他子项，比如sruct, enum, trait, function...
+
+```rs
+// src/lib.rs
+mod front_of_house {
+    mod hosting {
+        fn add_to_waitlist() {}
+        fn seat_at_table() {}
+    }
+
+    mod serving {
+        fn take_order() {}
+        fn serve_order() {}
+        fn take_payment() {}
+    }
+}
+```
+
+src/main.rs和src/lib.rs都叫做crate roots, 这两个文件的内容形成了名为crate的模块，违约整个模块树的根部
+
+```bash
+crate # crate root
+└── front_of_house
+    └── hostig
+    │    ├── buildadd_to_waitlist
+    │    └── seat_at_table
+    └── serving
+        ├── take_order
+        ├── serve_order
+        └──take_payment
+```
