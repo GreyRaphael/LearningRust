@@ -8,6 +8,7 @@
   - [Vector](#vector)
     - [vector store different type of data](#vector-store-different-type-of-data)
   - [String](#string)
+  - [HashMap](#hashmap)
 
 ## struct
 
@@ -497,12 +498,12 @@ fn main() {
 ```
 
 字节(Bytes)、标量值(Scalar Values)、字形簇(Grapheme Clusters)
-- 其中字节就是u8, 标量值表面单字占用的字节，字形簇更加接近`字母`的概念
+- 其中字节就是u8, 标量值表面单字占用的字节，字形簇更加接近`字母`的概念(一般第三方提供)
 
 ```rs
 fn main() {
     let s1 = String::from("hi你好");
-    // "你好"unicode标量值是3，中文一般是2或者3
+    // "你好"unicode标量值用3个字节表示(228, 189, 160)，中文一般是2或者3
     println!("{}", s1.len()); // 8
 
     for b in s1.bytes() { // 获取字节
@@ -510,7 +511,7 @@ fn main() {
     } // 104, 105, 228, 189, 160, 229, 165, 189,
 
     println!(); // 换行
-    for c in s1.chars() { // 获取字形簇
+    for c in s1.chars() { // 获取标量值
         print!("{}, ", c);
     } // h, i, 你, 好,
 }
@@ -528,3 +529,6 @@ fn main() {
     println!("{}", s3); // hi你
 }
 ```
+
+## HashMap
+
