@@ -10,6 +10,7 @@
   - [Code management](#code-management)
     - [Path](#path)
     - [`use`](#use)
+    - [Package](#package)
 
 ## Preparation
 
@@ -366,3 +367,57 @@ fn main() {}
 
 `pub use crate::front_of_house::hosting;`
 
+### Package
+
+如果vscode的`rust-analyzer`一直卡住，先F1 `Stop`，然后`cargo build`
+
+如果获取<https://crates.io/>速度太慢，编辑 `~/.cargo/config` 文件，添加以下内容：
+
+```bash
+[source.crates-io]
+replace-with = 'tuna'
+
+[source.tuna]
+registry = "https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git"
+```
+
+标准库(std)也被当作是外部包
+- 不需要修改Cargo.toml来包含std
+- 需要使用特定条目的，才使用`use std::`
+
+
+```rs
+use rand::Rng;
+use std::cmp::Ordering;
+use std::io;
+
+fn main() {
+    let secret_num = rand::thread_rng().gen_range(1..101); // [1, 101)
+    println!("secret_num={}", secret_num);
+}
+```
+
+- 简化同一个父级下的子条目
+
+```rs
+use rand::Rng;
+use std::{cmp::Ordering, io};
+
+fn main() {
+    let secret_num = rand::thread_rng().gen_range(1..101); // [1, 101)
+    println!("secret_num={}", secret_num);
+}
+```
+
+` 引入父级和子级
+
+```rs
+// use std::io;
+// use std::io::Write;
+
+// 相当于上面的情况
+use std::io{self, Write};
+```
+
+- 引入某个条目下面所有的使用通配符 `use std::collections::*;`
+  - 使用场景：将所有的被测试代码引入到tests模块
