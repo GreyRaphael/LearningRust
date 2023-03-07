@@ -484,3 +484,47 @@ fn main() {
     println!("{}", s3);
 }
 ```
+
+rust字符串不支持索引语法访问: `str1[0]`不允许
+> `String`本质是对`Vec<u8>`的包装
+
+```rs
+fn main() {
+    let s1 = String::from("hello, 你好");
+    // let c1 = s1[0]; //error, not support Index<{integer}>
+    // let c2 = &s1[0]; //error, not support Index<{integer}>
+}
+```
+
+字节(Bytes)、标量值(Scalar Values)、字形簇(Grapheme Clusters)
+- 其中字节就是u8, 标量值表面单字占用的字节，字形簇更加接近`字母`的概念
+
+```rs
+fn main() {
+    let s1 = String::from("hi你好");
+    // "你好"unicode标量值是3，中文一般是2或者3
+    println!("{}", s1.len()); // 8
+
+    for b in s1.bytes() { // 获取字节
+        print!("{}, ", b);
+    } // 104, 105, 228, 189, 160, 229, 165, 189,
+
+    println!(); // 换行
+    for c in s1.chars() { // 获取字形簇
+        print!("{}, ", c);
+    } // h, i, 你, 好,
+}
+```
+
+获取String切片slice
+- 切割必须沿着字符的边界进行切割，否则引起panic
+
+```rs
+fn main() {
+    let s1 = String::from("hi你好");
+    // let s2=&s1[..4];
+    // println!("{}", s2); // error, 切割错误, byte index 4 is not a char boundary
+    let s3 = &s1[..5];
+    println!("{}", s3); // hi你
+}
+```
