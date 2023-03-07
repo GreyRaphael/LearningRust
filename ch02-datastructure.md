@@ -6,6 +6,7 @@
   - [enum](#enum)
     - [`Option<T>`](#optiont)
   - [Vector](#vector)
+    - [vector store different type of data](#vector-store-different-type-of-data)
 
 ## struct
 
@@ -349,7 +350,7 @@ fn plus_one(x: Option<i32>) -> Option<i32> {
 
 `Vec<T>`
 - 元素类型相同
-- 内存中连续存放
+- 内存中连续存放，在heap上
 - 出了作用域，Vector被删除，里面的元素也被删除
 
 ```rs
@@ -383,5 +384,30 @@ fn main() {
     let first = &v1[2]; // immutable ref
     v1.push(5); // error,因为已经是immutable引用，所以不能使用mutable ref, 而push调用的是mutable ref
     println!("{}", first);
+}
+```
+
+### vector store different type of data
+
+> Vector + Enum
+
+```rs
+#[derive(Debug)]
+enum SheetCell {
+    Int(i32),
+    Float(f64),
+    Text(String),
+}
+
+fn main() {
+    let row = vec![
+        SheetCell::Int(3),
+        SheetCell::Text(String::from("blue")),
+        SheetCell::Float(12.3),
+    ];
+
+    for cell in &row {
+        println!("{:?}", cell)
+    }
 }
 ```
