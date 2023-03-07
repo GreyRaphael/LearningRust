@@ -579,8 +579,92 @@ fn main() {
         String::from("moris"),
     ];
     let scores = vec![10, 20, 30, 40];
-    let dict: HashMap<_, _> = names.iter().zip(scores.iter()).collect(); // 必须指明类型，因为collect可以返回多种类型
+    let dict: HashMap<_, _> = names.iter().zip(scores.iter()).collect(); // 必须指明类型，因为collect可以返回多种类型, _ 用于自动推断
 
     println!("{:?}", dict); // {"moris": 30, "tom": 20, "grey": 10}
+}
+```
+
+```rs
+use std::collections::HashMap;
+
+fn main() {
+    let name1 = String::from("grey");
+    let name2 = String::from("tom");
+
+    let mut map1 = HashMap::new();
+    map1.insert(name1, 100);
+    map1.insert(name2, 200);
+    println!("{:?}", map1);
+    // println!("{}, {}", name1, name2); // insert之后，name1, name2失去所有权
+
+    let name3 = String::from("grey");
+    let name4 = String::from("tom");
+    let mut map2 = HashMap::new();
+    map2.insert(&name3, 100);
+    map2.insert(&name4, 200);
+    println!("{:?}", map2);
+    println!("{}, {}", name3, name4); // 使用引用，insert之后，name3, name4仍具有所有权
+}
+```
+
+visist hashmap
+
+```rs
+use std::collections::HashMap;
+
+fn main() {
+    let map1 = HashMap::from([(String::from("grey"), 2), (String::from("James"), 4)]);
+
+    match map1.get("grey") {
+        Some(s) => println!("score={}", s),
+        None => println!("not exist!"),
+    }
+
+    for (k, v) in &map1 {
+        println!("{}:{}", k, v);
+    }
+}
+```
+
+更新HashMap
+- 每个k只对应一个v
+  - k已经存在
+    - 替换现有v
+    - 保留现有v, 忽略新v
+    - 合并现有的v和新v
+  - k不存在
+    - 添加新v
+
+```rs
+use std::collections::HashMap;
+
+fn main() {
+    let mut map1 = HashMap::from([(String::from("grey"), 2), (String::from("James"), 4)]);
+    // upate directly
+    map1.insert(String::from("grey"), 1000);
+    println!("{:?}", map1); // {"James": 4, "grey": 1000}
+
+    // if not exist, add; else, update
+    map1.entry(String::from("Jerry")).or_insert(200);
+    map1.entry(String::from("James")).or_insert(100);
+    println!("{:?}", map1); //{"Jerry": 200, "grey": 1000, "James": 4}
+}
+```
+
+>`or_insert()`返回key-value中value的可变引用
+
+```rs
+use std::collections::HashMap;
+
+fn main() {
+    let txt = "hello world wonderful world";
+    let mut map = HashMap::new();
+    for word in txt.split_whitespace() {
+        let value = map.entry(word).or_insert(0); // or_insert返回可变引用 &mut i32
+        *value += 1;
+    }
+
+    println!("{:?}", map); // {"wonderful": 1, "world": 2, "hello": 1}
 }
 ```
