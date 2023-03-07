@@ -7,6 +7,7 @@
     - [`Option<T>`](#optiont)
   - [Vector](#vector)
     - [vector store different type of data](#vector-store-different-type-of-data)
+  - [String](#string)
 
 ## struct
 
@@ -409,5 +410,77 @@ fn main() {
     for cell in &row {
         println!("{:?}", cell)
     }
+}
+```
+
+## String
+
+- 字符串数据结构复杂, 基于Byet的集合
+- 字符串采用utf8编码
+
+Rust**核心语言**层面，只有一种字符串类型, 即字符串切片: `&str`
+字符串切片(`&str`): 对存储于其他地方的utf8编码的字符串的引用
+- 字符串字面值，存储在二进制文件中，也是字符串切片
+
+`String`类型来自**标准库**，不是核心语言
+- 可增长、可修改、可拥有
+- utf8编码
+
+```rs
+fn main() {
+    // method1
+    let mut s1 = String::new();
+    s1.push('a');
+    s1.push('b');
+    s1.push_str("你好");
+    println!("{}", s1);
+
+    // method2
+    let mut s2 = "hello".to_string();
+    s2.push_str("你号");
+    println!("{}", s2);
+
+    // method3
+    let mut s3 = String::from("你好");
+    s3.push_str("moris");
+    println!("{}", s3);
+
+    // concate string
+    let s4=String::from("hello ");
+    let s5=String::from("james");
+    let s6=s4+&s5;
+    // println!("{}", s4); 
+    // s4丧失所有权, 因为调用了 fn add(self, s:&str)->String {...}
+    // s4的所有权进入函数add里面，所以失效; s5是不可变引用，所以没有失效
+    println!("{}", s5);
+    println!("{}", s6);
+}
+```
+
+```rs
+// &s5的类型是&String, 但是被强制解引用转换成slice &str
+fn add(self, s:&str)->String {
+
+}
+```
+
+- `format!` 拼接多个字符串
+
+```rs
+fn main() {
+    let s1 = String::from("hello");
+    let s2 = String::from("world");
+    let s3 = String::from("你好");
+
+    // let s4 = s1 + "-" + &s2 + "-" + &s3; // s1丧失所有权
+    // println!("{}", s4);
+
+    let s5 = format!("{}-{}-{}", s1, s2, s3);
+    println!("{}", s5);
+
+    // s1, s2, s3仍具有所有权
+    println!("{}", s1);
+    println!("{}", s2);
+    println!("{}", s3);
 }
 ```
