@@ -2,6 +2,7 @@
 
 - [Generic Data Type](#generic-data-type)
   - [function with generic](#function-with-generic)
+  - [struct with generic](#struct-with-generic)
 
 > 泛型: 提升代码复用能力，使其适用于多种数据类型
 
@@ -76,6 +77,30 @@ fn get_largest2<T>(list: &[T]) -> T { //这一行进行泛型改造
         }
     }
     largest
+}
+```
+
+## struct with generic
+
+```rs
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+struct Info<T, U> {
+    x: T,
+    y: U,
+}
+
+fn main() {
+    let s1 = Point { x: 10, y: 20 };
+    let s2 = Point { x: 10.1, y: 20.2 };
+
+    let i1 = Info { x: 10, y: 20 };
+    let i2 = Info { x: 10, y: 20.1 };
+    let i3 = Info { x: 10.1, y: 20.1 };
+    let i4 = Info { x: 10.1, y: 20 };
 }
 ```
 
