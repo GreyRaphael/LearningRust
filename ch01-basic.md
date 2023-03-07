@@ -24,6 +24,7 @@
     - [`panic!`](#panic)
     - [`Result<T, E>`](#resultt-e)
     - [`unwrap`](#unwrap)
+    - [return error](#return-error)
 
 ## Variable
 
@@ -947,5 +948,84 @@ fn main() {
             panic!("Error openning file: {:?}", error);
         }
     });
+}
+```
+
+### return error
+
+```rs
+use std::{
+    fs::File,
+    io::{self, Read},
+};
+
+fn read_username_from_file() -> Result<String, io::Error> {
+    let mut f = match File::open("hello.txt") {
+        // mut f是为了下面read_to_string
+        Ok(file) => file,
+        Err(e) => return Err(e),
+    };
+    let mut s = String::new();
+    match f.read_to_string(&mut s) {
+        Err(e) => Err(e),
+        // Ok(x)=>Ok(s),// read_to_string的Result是usize, 重新构造了Result
+        // Ok(_)=>Ok(s),//采用通配符，忽略read_to_string的返回值
+        _ => Ok(s), //采用通配符，忽略read_to_string的返回值
+    }
+}
+
+fn main() {
+    let result = read_username_from_file().unwrap();
+    println!("{:?}", result); // "grey"
+}
+```
+
+通过传播错误的符号`?`来返回错误
+- 如果`?`前面的值是Ok, 那么就作为表达式的值，然后继续执行程序
+- 如果`?`前面的值是Err, 那么Err就作为这个函数的`return`返回值
+- `std::convert::From`上的`from`函数用于不同错误之间的转换。`?`的错误会隐式地被`from`函数进行转换为整个函数返回的Err类型
+
+```rs
+use std::{
+    fs::File,
+    io::{self, Read},
+};
+
+fn read_username_from_file() -> Result<String, io::Error> {
+    let mut f = File::open("hello.txt")?;
+    let mut s = String::new();
+    f.read_to_string(&mut s)?;
+    Ok(s)
+}
+
+fn main() {
+    let result = read_username_from_file().unwrap();
+    println!("{:?}", result); // "grey"
+}
+```
+
+```rs
+fn read_username_from_file() -> Result<String, io::Error> {
+    let mut s = String::new();
+    // 链式调用，简洁代码
+    File::open("hello.txt")?.read_to_string(&mut s)?;
+    Ok(s)
+}
+```
+
+- `?`只能用于返回值是`Result`类型的函数，用在默认main函数里面不行，因为main函数默认返回类型是`()`
+
+```rs
+use std::{error::Error, fs::File};
+
+// // error
+// fn main() {
+//     let f = File::open("hello.txt")?;
+// }
+
+// Box<dyn Error>>是任何可能的错误类型
+fn main() -> Result<(), Box<dyn Error>> {
+    let f = File::open("hello.txt")?;
+    Ok(())
 }
 ```
