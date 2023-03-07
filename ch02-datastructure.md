@@ -8,7 +8,7 @@
   - [Vector](#vector)
     - [vector store different type of data](#vector-store-different-type-of-data)
   - [String](#string)
-  - [HashMap](#hashmap)
+  - [`HashMap<K, V>`](#hashmapk-v)
 
 ## struct
 
@@ -530,5 +530,57 @@ fn main() {
 }
 ```
 
-## HashMap
+## `HashMap<K, V>`
 
+HashMap
+- HashMap不在prelude中，需要`use std::collections::HashMap;`
+- 数据存储在heap上
+- 内部元素同构：所有的key同一种类型，所有的value同一种类型
+
+```rs
+use std::collections::HashMap;
+
+fn main() {
+    let mut scores = HashMap::new();
+    scores.insert(String::from("grey"), 89);
+}
+```
+
+```rs
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+
+fn main() {
+    let s = Vec::from([1, 2, 3]);
+    println!("{:?}", s);
+
+    let s = BTreeSet::from([1, 2, 3]);
+    println!("{:?}", s);
+
+    let s = HashSet::from([1, 2, 3]);
+    println!("{:?}", s);
+
+    let s = BTreeMap::from([(1, 2), (3, 4)]);
+    println!("{:?}", s);
+
+    let s = HashMap::from([(String::from("grey"), 2), (String::from("James"), 4)]);
+    println!("{:?}", s);
+}
+```
+
+zip to crate HashMap
+
+```rs
+use std::collections::HashMap;
+
+fn main() {
+    let names = vec![
+        String::from("grey"),
+        String::from("tom"),
+        String::from("moris"),
+    ];
+    let scores = vec![10, 20, 30, 40];
+    let dict: HashMap<_, _> = names.iter().zip(scores.iter()).collect(); // 必须指明类型，因为collect可以返回多种类型
+
+    println!("{:?}", dict); // {"moris": 30, "tom": 20, "grey": 10}
+}
+```
