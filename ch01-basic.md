@@ -20,6 +20,7 @@
     - [ownership with function](#ownership-with-function)
     - [reference](#reference)
     - [slice](#slice)
+  - [`panic!`](#panic)
 
 ## Variable
 
@@ -785,3 +786,58 @@ fn first_world(s: &str) -> &str {
 }
 ```
 
+## `panic!`
+
+错误分类
+- 可恢复的错误，采用`Result<T, E>`： 比如文件未找到
+- 不可恢复的错误，采用`panic!`宏: bug, 访问越界
+
+panic宏动作
+- 打印错误信息
+- 展开(unwind), 清理调用栈(stack)
+- 退出程序
+
+当panic发生，可选两种方案
+- 默认：程序展开调用栈(工作量大)
+  - rust沿着调用栈往回走
+  - 清理每个遇到的函数中的数据
+- 非默认：立即终止调用栈(absort)，如果想要binary更小，在`Cargo.toml`配置
+  - 不进行清理，直接停止程序
+  - 内存需要OS清理
+
+```toml
+[package]
+name = "hello-world"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rand = "0.8.5" 
+
+[profile.release]
+panic = "abort"
+```
+
+查看详细的报错trace: 
+> Linux: `RUST_BACKTRACE=1 cargo run`  
+> Windows: `$env:RUST_BACKTRACE=1 ; cargo run`
+
+```rs
+fn main() {
+    panic!("crash!");
+}
+```
+
+或者直接配置
+
+```rs
+use std::env;
+
+fn main() {
+    // env::set_var("RUST_BACKTRACE", "full");
+    env::set_var("RUST_BACKTRACE", "1");
+    panic!("crash!");
+}
+```
+
+为了获取带调试信息的回溯,直接使用`cargo run`, 而不能使用`cargo run --release`
