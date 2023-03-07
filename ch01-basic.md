@@ -23,6 +23,7 @@
   - [error handle](#error-handle)
     - [`panic!`](#panic)
     - [`Result<T, E>`](#resultt-e)
+    - [`unwrap`](#unwrap)
 
 ## Variable
 
@@ -893,6 +894,44 @@ fn main() {
 }
 ```
  
+### `unwrap`
+
+unwrap: match表达式的一种快捷方法
+- 如果Result的结果是Ok, 就返回Ok里面的值
+- 如果Result的结果是Err, 就`panic!`
+
+```rs
+use std::fs::File;
+
+fn main() {
+    let f = File::open("hello.txt").unwrap(); // 如果打开失败就panic，相当于下面的例子
+}
+```
+
+```rs
+use std::fs::File;
+
+fn main() {
+    let f = File::open("hello.txt"); // Result<File, Error>
+
+    let file = match f {
+        Ok(file) => file,
+        Err(error) => {
+            panic!("Error openning file: {:?}", error);
+        }
+    };
+}
+```
+
+```rs
+use std::fs::File;
+
+fn main() {
+    // let f = File::open("hello.txt").unwrap();
+    let f = File::open("hello.txt").expect("无法打开文件"); // 自定义信息
+}
+```
+
 利用`unwrap`来简洁代码
 
 ```rs
