@@ -5,6 +5,7 @@
     - [struct method](#struct-method)
   - [enum](#enum)
     - [`Option<T>`](#optiont)
+  - [Vector](#vector)
 
 ## struct
 
@@ -341,5 +342,46 @@ fn plus_one(x: Option<i32>) -> Option<i32> {
         None => None, 
         Some(i) => Some(i + 1),
     }
+}
+```
+
+## Vector
+
+`Vec<T>`
+- 元素类型相同
+- 内存中连续存放
+- 出了作用域，Vector被删除，里面的元素也被删除
+
+```rs
+fn main() {
+    let mut v1 = Vec::new(); // 通过下面的push才推断出Vec<i32>
+    v1.push(1);
+    let mut v2: Vec<u8> = Vec::new();
+    // v2.push(256); // error
+
+    // recommended, by macros
+    let v3 = vec!['a', 'b', 'c', 'd'];
+
+    // visit method1
+    let idx = 2;
+    // let idx = 100;
+    let third = &v3[idx];
+    println!("{}", third);
+    // visist method2, 超出索引引用会panic, 使用get不会panic
+    match v3.get(idx) {
+        Some(value) => println!("{}", value),
+        None => println!("no 3rd num"),
+    }
+}
+```
+
+因为vector元素在内存连续分布的，如果添加一个新元素，可能原来连续的区段不够，需要释放并重新分配内存；下面的`first`的不可变引用就会失效，导致问题
+
+```rs
+fn main() {
+    let mut v1 = vec![1, 2, 3, 4, 5];
+    let first = &v1[2]; // immutable ref
+    v1.push(5); // error,因为已经是immutable引用，所以不能使用mutable ref, 而push调用的是mutable ref
+    println!("{}", first);
 }
 ```
