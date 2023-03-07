@@ -11,6 +11,7 @@
     - [Path](#path)
     - [`use`](#use)
     - [Package](#package)
+    - [module to different files](#module-to-different-files)
 
 ## Preparation
 
@@ -421,3 +422,76 @@ use std::io{self, Write};
 
 - 引入某个条目下面所有的使用通配符 `use std::collections::*;`
   - 使用场景：将所有的被测试代码引入到tests模块
+
+### module to different files
+
+将模块拆分到多个文件
+
+```bash
+src
+├── front_of_house.rs
+├── lib.rs
+└── main.rs
+```
+
+```rs
+// main.rs
+fn main() {}
+```
+
+```rs
+// lib.rs
+mod front_of_house; // ;意味着，将从front_of_house.rs里面找
+use crate::front_of_house::hosting;
+
+pub fn eat_at_restaurant() {
+    hosting::add_to_waitlist();
+}
+```
+
+```rs
+// front_of_house.rs
+pub mod hosting {
+    pub fn add_to_waitlist() {}
+    fn seat_at_table() {}
+}
+
+mod serving {
+    fn take_order() {}
+    fn serve_order() {}
+
+    fn take_payment() {}
+}
+```
+
+进一步拆分: 在模块后面加`;`，然后 将`{}`里面的内容移动到文件里面
+
+```bash
+src/
+├── front_of_house
+│   ├── hosting.rs
+│   └── serving.rs
+├── front_of_house.rs
+├── lib.rs # 未改变
+└── main.rs # 未改变
+```
+
+```rs
+// front_of_house.rs
+pub mod hosting;
+mod serving;
+```
+
+```rs
+// serving.rs
+fn take_order() {}
+fn serve_order() {}
+
+fn take_payment() {}
+```
+
+```rs
+// hosting.rs
+pub fn add_to_waitlist() {}
+fn seat_at_table() {}
+```
