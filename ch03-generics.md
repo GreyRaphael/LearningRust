@@ -3,6 +3,7 @@
 - [Generic Data Type](#generic-data-type)
   - [function with generic](#function-with-generic)
   - [struct with generic](#struct-with-generic)
+    - [enum with generic](#enum-with-generic)
 
 > 泛型: 提升代码复用能力，使其适用于多种数据类型
 
@@ -103,4 +104,21 @@ fn main() {
     let i4 = Info { x: 10.1, y: 20 };
 }
 ```
+
+### enum with generic
+
+比如`Option<T>`, `Result<T, E>`
+
+```rs
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+```
+
 
