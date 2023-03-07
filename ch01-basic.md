@@ -256,6 +256,62 @@ fn main() {
 }
 ```
 
+example: get largest
+
+```rs
+fn get_largest1(list: &[i32]) -> i32 {
+    // i32 slice
+    let mut largest = &list[0]; // largest: &i32
+    for item in list {
+        // item: &i32
+        if item > largest {
+            largest = item;
+        }
+    }
+    *largest
+}
+
+fn get_largest2(list: &[i32]) -> i32 {
+    // i32 slice
+    let mut largest = list[0]; // largest: i32
+    for &item in list {
+        // item: i32
+        if item > largest {
+            largest = item;
+        }
+    }
+    largest
+}
+
+fn get_largest3(list: &[i32]) -> i32 {
+    // i32 slice
+    let mut largest = list[0]; // largest: i32
+    for item in list {
+        // item: &i32
+        if *item > largest {
+            largest = *item;
+        }
+    }
+    largest
+}
+fn main() {
+    let v1 = vec![11, 2, 33, 4, 5];
+    let l1 = [11, 2, 3, 44, 5];
+    let n1 = get_largest1(&v1);
+    let n2 = get_largest2(&v1);
+    let n3 = get_largest3(&v1);
+    let n11 = get_largest1(&l1);
+    let n22 = get_largest2(&l1);
+    let n33 = get_largest3(&l1);
+    println!("largest={}", n1);
+    println!("largest={}", n2);
+    println!("largest={}", n3);
+    println!("largest={}", n11);
+    println!("largest={}", n22);
+    println!("largest={}", n33);
+}
+```
+
 ### if-else
 
 ```rs
