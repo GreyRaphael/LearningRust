@@ -848,3 +848,65 @@ fn main() {
 
 ### `Result<T, E>`
 
+```rs
+enum Result<T, E>{
+    Ok(T),
+    Err(E),
+}
+```
+
+Result枚举
+- T: 操作成功，Ok变体里返回的数据的类型
+- E: 操作失败，Err变体里返回的错误的类型
+
+```rs
+use std::fs::File;
+
+fn main() {
+    let f = File::open("hello.txt"); // Result<File, Error>
+
+    let file = match f {
+        Ok(file) => file,
+        Err(error) => {
+            panic!("Error openning file: {:?}", error);
+        }
+    };
+}
+```
+
+```rs
+use std::{fs::File, io::ErrorKind};
+
+fn main() {
+    let f = File::open("hello.txt"); // Result<File, Error>
+
+    let file = match f {
+        Ok(file) => file,
+        Err(error) => match error.kind() {
+            ErrorKind::NotFound => match File::create("hello.txt") {
+                Ok(fc) => fc,
+                Err(e) => panic!("Error crateing file: {:?}", e),
+            },
+            other_err => panic!("Error openning file: {:?}", other_err),
+        },
+    };
+}
+```
+ 
+利用`unwrap`来简洁代码
+
+```rs
+use std::{fs::File, io::ErrorKind};
+
+fn main() {
+    let f = File::open("hello.txt").unwrap_or_else(|error| {
+        if error.kind() == ErrorKind::NotFound {
+            File::create("hello.txt").unwrap_or_else(|err| {
+                panic!("Error creating file: {:?}", err);
+            })
+        } else {
+            panic!("Error openning file: {:?}", error);
+        }
+    });
+}
+```
