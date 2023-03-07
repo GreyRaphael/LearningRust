@@ -951,6 +951,18 @@ fn main() {
 }
 ```
 
+使用`unwrap`的场景
+
+```rs
+use std::net::IpAddr;
+
+// error
+fn main() {
+    let home: IpAddr = "127.0.0.1".parse().unwrap(); // 绝对不犯错的时候用unwrap
+    println!("{}", home.is_ipv4()); // true
+}
+```
+
 ### return error
 
 ```rs
