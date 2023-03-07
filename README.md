@@ -361,3 +361,8 @@ fn f2() -> IoResult {}
 
 fn main() {}
 ```
+
+- `use`的模块默认是private，想要外部也能访问，使用`pub use`
+
+`pub use crate::front_of_house::hosting;`
+
