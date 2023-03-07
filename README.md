@@ -9,6 +9,7 @@
   - [Guess Game](#guess-game)
   - [Code management](#code-management)
     - [Path](#path)
+    - [`use`](#use)
 
 ## Preparation
 
@@ -287,4 +288,76 @@ pub fn eat_at_restaurant() {
     meal.toast=String::from("Wheat");
     // meal.fruit=String::from("Peach");// error, private
 }
+```
+
+### `use`
+
+- 引入函数的时候，use指定到函数的父级
+
+```rs
+// src/lib.rs
+mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_waitlist() {}
+        fn seat_at_table() {}
+    }
+
+    mod serving {
+        fn take_order() {}
+        fn serve_order() {}
+
+        fn take_payment() {}
+    }
+}
+
+// use AbsolutePath
+use crate::front_of_house::hosting;
+// 相当于 mod hosting{}
+
+// // use RelativePath
+// // 因为front_of_house是同一级，所以直接去掉crate就行
+// use front_of_house::hosting;
+
+pub fn eat_at_restaurant() {
+    hosting::add_to_waitlist(); // 引入函数的时候，use指定到函数的父级，比如hosting
+    // hosting::seat_at_table(); // error, private
+}
+```
+
+- 引入struct, enum的时候直接指定到struct, enum
+
+```rs
+// src/main.rs
+use std::collections::HashMap;
+
+fn main() {
+    let mut map=HashMap::new();
+    map.insert(1, 12.5);
+}
+```
+
+- 同名的条目指定到父级
+
+```rs
+use std::fmt;
+use std::io;
+
+fn f1() -> fmt::Result {}
+
+fn f2() -> io::Result {}
+
+fn main() {}
+```
+
+- 使用`as`避免同名条目
+
+```rs
+use std::fmt::Result;
+use std::io::Result as IoResult;
+
+fn f1() -> Result {}
+
+fn f2() -> IoResult {}
+
+fn main() {}
 ```
