@@ -20,7 +20,9 @@
     - [ownership with function](#ownership-with-function)
     - [reference](#reference)
     - [slice](#slice)
-  - [`panic!`](#panic)
+  - [error handle](#error-handle)
+    - [`panic!`](#panic)
+    - [`Result<T, E>`](#resultt-e)
 
 ## Variable
 
@@ -786,11 +788,13 @@ fn first_world(s: &str) -> &str {
 }
 ```
 
-## `panic!`
+## error handle
 
 错误分类
 - 可恢复的错误，采用`Result<T, E>`： 比如文件未找到
 - 不可恢复的错误，采用`panic!`宏: bug, 访问越界
+
+### `panic!`
 
 panic宏动作
 - 打印错误信息
@@ -841,3 +845,6 @@ fn main() {
 ```
 
 为了获取带调试信息的回溯,直接使用`cargo run`, 而不能使用`cargo run --release`
+
+### `Result<T, E>`
+
