@@ -4,6 +4,7 @@
   - [function with generic](#function-with-generic)
   - [struct with generic](#struct-with-generic)
     - [enum with generic](#enum-with-generic)
+    - [method with generic](#method-with-generic)
 
 > 泛型: 提升代码复用能力，使其适用于多种数据类型
 
@@ -121,4 +122,53 @@ enum Result<T, E> {
 }
 ```
 
+### method with generic
 
+```rs
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Point<T> {
+    fn x(&self) -> &T {
+        &self.x
+    }
+}
+
+impl Point<f64> {
+    fn func(&self) -> &f64 {
+        &self.y
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 10, y: 20 };
+    println!("{}", p1.x()); //10
+    let p2 = Point { x: 10.1, y: 20.1 };
+    println!("{}", p2.func()); // 20.1
+}
+```
+
+```rs
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+impl<T, U> Point<T, U> {
+    fn mixup<V, W>(self, other: Point<V, W>) -> Point<T, W> {
+        Point {
+            x: self.x,
+            y: other.y,
+        }
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 10, y: 20.2 }; // <i32, f64>
+    let p2 = Point { x: "hello", y: 'c' }; // <&str, char>
+    let p3 = p1.mixup(p2);
+    println!("{}-{}", p3.x, p3.y); // 10-c
+}
+```
