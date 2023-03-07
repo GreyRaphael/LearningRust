@@ -848,6 +848,124 @@ fn main() {
 
 为了获取带调试信息的回溯,直接使用`cargo run`, 而不能使用`cargo run --release`
 
+example: struct getter
+
+```rs
+use rand::Rng;
+use std::io;
+
+struct Guess {
+    value: u32,
+}
+
+impl Guess {
+    fn new(num: u32) -> Guess {
+        if (num < 1) || (num > 100) {
+            panic!("number range should be [1, 100]");
+        }
+        Guess { value: num }
+    }
+
+    // getter, 如果这个模块在外部，value就是private,所以需要getter
+    fn value(&self) -> u32 {
+        self.value
+    }
+}
+
+fn main() {
+    println!("Guess!");
+    let secret_num = rand::thread_rng().gen_range(1..101); // [1, 101)
+
+    loop {
+        let mut num = String::new(); // mutable
+        io::stdin().read_line(&mut num).expect("cannot read line!");
+        let num: u32 = match num.trim().parse() {
+            Ok(x) => x,
+            Err(_) => continue,
+        };
+
+        let guess = Guess::new(num);
+        println!("{}", guess.value);
+
+        if guess.value() > secret_num {
+            println!("Too big!");
+        } else if guess.value() < secret_num {
+            println!("Too small!")
+        } else {
+            println!("You win!");
+            break;
+        }
+    }
+}
+```
+
+example: struct getter use lib.rs
+
+```bash
+src
+├── lib.rs
+└── main.rs
+```
+
+```rs
+// lib.rs
+pub mod custom_module {
+    pub struct Guess {
+        value: u32, // value is private
+    }
+
+    impl Guess {
+        pub fn new(num: u32) -> Guess {
+            if (num < 1) || (num > 100) {
+                panic!("number range should be [1, 100]");
+            }
+            Guess { value: num }
+        }
+
+        // getter, 如果这个模块在外部，value就是private,所以需要getter
+        pub fn value(&self) -> u32 {
+            self.value
+        }
+    }
+}
+```
+
+```rs
+// main.rs
+use hello_world::custom_module::Guess;
+use rand::Rng;
+use std::io;
+
+fn main() {
+    println!("Game begins!");
+    let secret_num = rand::thread_rng().gen_range(1..101); // [1, 101)
+
+    loop {
+        let mut num = String::new();
+        io::stdin().read_line(&mut num).expect("cannot read line!");
+        let num: u32 = match num.trim().parse() {
+            Ok(x) => x,
+            Err(_) => {
+                println!("Enter a valid number");
+                continue;
+            }
+        };
+
+        let guess = Guess::new(num); //校验工作都放在Guess内部
+        println!("You num={}", guess.value());
+
+        if guess.value() > secret_num {
+            println!("Too big!");
+        } else if guess.value() < secret_num {
+            println!("Too small!")
+        } else {
+            println!("You win!");
+            break;
+        }
+    }
+}
+```
+
 ### `Result<T, E>`
 
 ```rs
