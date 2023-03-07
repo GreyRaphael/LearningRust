@@ -5,7 +5,7 @@
     - [struct method](#struct-method)
   - [enum](#enum)
     - [`Option<T>`](#optiont)
-  - [Vector](#vector)
+  - [`Vec<T>`](#vect)
     - [vector store different type of data](#vector-store-different-type-of-data)
   - [String](#string)
   - [`HashMap<K, V>`](#hashmapk-v)
@@ -348,7 +348,7 @@ fn plus_one(x: Option<i32>) -> Option<i32> {
 }
 ```
 
-## Vector
+## `Vec<T>`
 
 `Vec<T>`
 - 元素类型相同
