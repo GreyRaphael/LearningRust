@@ -461,3 +461,31 @@ fn main() {
     Pair::cmp_display(&p2);
 }
 ```
+
+**blanket implementations**:
+> 为满足trait bound的类型实现某种trait, 叫做**覆盖实现**
+
+对于标准库`string.rs`中, 
+
+```rs
+// 对于满足trait bound(Display)的类型T，实现了一个新的trait, 叫做ToString
+impl<T: Display> ToString for T {
+    // 这个ToString trait里面正好有一个to_string函数，实现数据转字符串的功能
+    fn to_string(&self)->String{
+        //....
+    }
+}
+```
+
+```rs
+fn main() {
+    let s1 = 3.to_string();
+    let s2 = 12.5.to_string();
+    let s3 = 'c'.to_string();
+    let s4 = "hello".to_string();
+    println!("{}", s1);
+    println!("{}", s2);
+    println!("{}", s3);
+    println!("{}", s4);
+}
+```
