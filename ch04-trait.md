@@ -1,0 +1,4 @@
+## Trait
+
+- [Trait](#trait)
+
