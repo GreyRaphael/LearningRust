@@ -1,6 +1,7 @@
 # Lifetime
 
 - [Lifetime](#lifetime)
+  - [dangling reference](#dangling-reference)
 
 生命周期: 让**引用**保持有效的作用域
 > 生命周期目的是为了避免`dangling reference`
@@ -35,3 +36,51 @@ fn main() {
 }
 ```
 
+## dangling reference
+
+> rust编译器采用**借用检查器**：比较作用域来判断所有的借用是否合法
+
+
+example: r的生命周期包含x
+
+```rs
+fn main() {
+    {
+        let r;
+        {
+            let x = 5;
+            // r = &x; // error, 因为x离开作用域之后，被清理了，x变成了dangline ref
+        }
+        println!("r:{}", r);
+    }
+}
+```
+
+```rs
+// 正确做法，x的生命周期包含了r的生命周期
+fn main() {
+    let x = 5;
+    let r = &x;
+}
+```
+
+example: 比较字符串长短
+
+```rs
+fn main() {
+    let s1 = String::from("Trump");
+    let s2 = "Biden";
+    let result = longest(s1.as_str(), s2);
+    println!("{}", result);
+}
+
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+    // 因为所有参数都是ref, 返回值无法判断生命周期到底跟x还是y
+    // 所以标记出生命周期，对齐
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+```
