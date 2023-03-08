@@ -5,6 +5,7 @@
 - [Polymorphism](#polymorphism)
   - [trait as parameter](#trait-as-parameter)
   - [trait as return](#trait-as-return)
+  - [trait `PartialOrd`](#trait-partialord)
 
 > Trait: 告诉编译器，某种类型具有哪些并且可以与其它类型共享的功能。**抽象地定义共享行为**，与其他语言中的interface有点类似
 
@@ -288,5 +289,73 @@ pub fn notify6(s:&str)->impl Summary {
         author: String::from("Joe Biden"),
         location: String::from("Washington Dc"),
     }
+}
+```
+
+### trait `PartialOrd`
+
+改造之前的`get_largest2`函数，使之能够处理`>`
+> 如果容器里面的元素，实现了`Copy` trait，元素保存在stack, 那么可以使用下面的例子
+
+```rs
+fn get_largest2<T: PartialOrd + Copy>(list: &[T]) -> T {
+    let mut largest = list[0]; // 通过+Copy trait解决
+    for &item in list {
+        if item > largest {
+            // >的问题通过std::cmp::PartialOrd解决
+            largest = item;
+        }
+    }
+    largest
+}
+
+fn main() {
+    let v1 = vec![11, 2, 33, 4, 5];
+    let l1 = [11, 2, 3, 44, 5];
+    let l2 = ['y', 'm', 'A', 'b'];
+    let n1 = get_largest2(&v1);
+    let n2 = get_largest2(&l1);
+    let n3 = get_largest2(&l2);
+    println!("{}", n1); // 33
+    println!("{}", n2); // 44
+    println!("{}", n3); // y
+}
+```
+
+如果容器里面的元素保存在heap上(比如String)，该类型没有实现`Copy` trait, 参考下面的例子
+
+```rs
+fn get_largest2<T: PartialOrd + Clone>(list: &[T]) -> T {
+    let mut largest = list[0].clone(); // 通过+Clone trait以及clone函数解决
+    for item in list {
+        if item > &largest {
+            // >的问题通过std::cmp::PartialOrd解决
+            largest = item.clone();
+        }
+    }
+    largest
+}
+
+fn get_largest20<T: PartialOrd>(list: &[T]) -> &T {
+    let mut largest = &list[0];
+    for item in list {
+        if item > largest {
+            // >的问题通过std::cmp::PartialOrd解决
+            largest = item;
+        }
+    }
+    largest
+}
+
+fn main() {
+    let l3 = [
+        String::from("grey"),
+        String::from("Trump"),
+        String::from("Biden"),
+    ];
+    let n4 = get_largest2(&l3);
+    let n5 = get_largest20(&l3);
+    println!("{}", n4); // grey
+    println!("{}", n5); // grey
 }
 ```
