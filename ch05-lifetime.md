@@ -3,6 +3,7 @@
 - [Lifetime](#lifetime)
   - [dangling reference](#dangling-reference)
   - [lifetime specifier](#lifetime-specifier)
+  - [lifetime with struct](#lifetime-with-struct)
 
 生命周期: 让**引用**保持有效的作用域
 > 生命周期目的是为了避免`dangling reference`
@@ -165,5 +166,21 @@ fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
 fn longest<'a>(x: &'a str, y: &'a str) -> String {
     let result=String::from("Putin");
     result // 直接返回值，而不是ref, 转移所有权到函数外面
+}
+```
+
+## lifetime with struct
+
+```rs
+fn main() {
+    let novel = String::from("Hello Trump. Hello Biden");
+    let first_setence = novel.split('.').next().expect("cannot find .");// &str
+    let i = ImportantExcerpt {
+        part: first_setence,
+    }; //因为first_setence的生命周期长于实例i，所以可行
+}
+
+struct ImportantExcerpt<'a> {
+    part: &'a str, // part的lifetime长于结构体实例
 }
 ```
