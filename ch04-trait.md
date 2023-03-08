@@ -359,3 +359,60 @@ fn main() {
     println!("{}", n5); // grey
 }
 ```
+
+保持p1和p2的所有权, method1, 要求Copy trait, 只能处理stack上面的数据
+> 处理heap上面的数据，同理，需要使用`Clone`和`.clone()`
+
+```rs
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+impl<T: Copy, U> Point<T, U> {
+    fn mixup<V, W: Copy>(&self, other: &Point<V, W>) -> Point<T, W> {
+        Point {
+            x: self.x,
+            y: other.y,
+        }
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 10, y: 20.2 }; // <i32, f64>
+    let p2 = Point { x: "hello", y: 'c' }; // <&str, char>
+    let p3 = p1.mixup(&p2); // 只需要限制T和W能够Copy就行
+    println!("{}-{}", p1.x, p1.y); // 10-20.2
+    println!("{}-{}", p2.x, p2.y); // hello-c
+    println!("{}-{}", p3.x, p3.y); // 10-c
+}
+```
+
+保持p1和p2的所有权, method2, 只使用reference
+
+```rs
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+impl<T, U> Point<T, U> {
+    // 因为所有参数都是ref, 所有需要指定lifetime相同，使用'a
+    // https://stackoverflow.com/questions/59522097/rust-lifetime-mismatch-in-trait-method
+    fn mixup<'a, V, W>(&'a self, other: &'a Point<V, W>) -> Point<&T, &W> {
+        Point {
+            x: &self.x,
+            y: &other.y,
+        }
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 10, y: 20.2 }; // <i32, f64>
+    let p2 = Point { x: "hello", y: 'c' }; // <&str, char>
+    let p3 = p1.mixup(&p2);
+    println!("{}-{}", p1.x, p1.y); // 10-20.2
+    println!("{}-{}", p2.x, p2.y); // hello-c
+    println!("{}-{}", p3.x, p3.y); // 10-c
+}
+```
