@@ -988,7 +988,8 @@ pub mod custom_module {
 
 ```rs
 // main.rs
-use hello_world::custom_module::Guess;
+// project1是Cargo.toml package下面的name
+use project1::custom_module::Guess;
 use rand::Rng;
 use std::io;
 
