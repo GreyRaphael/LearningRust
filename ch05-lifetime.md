@@ -191,10 +191,69 @@ struct ImportantExcerpt<'a> {
 编译器使用3个规则，在没有显式标注生命周期的情况下，来确定生命周期
 1. 每个引用类型的参数都有自己的生命周期。如果输入参数是2个，那么就有2个生命周期
 2. 如果只有1个输入生命周期参数，那么该生命周期被赋予所有的输出生命周期参数
-3. 如果有多个输入生命周期参数，但其中一个是`&self`或者`&mut self`，那么self的生命周期会赋予所有的输出生命周期
+3. 如果有多个输入生命周期参数，但其中一个是`&self`或者`&mut self`，那么self的生命周期会赋予所有的输出生命周期, 仅仅针对该struct的方法
 
 - 规则1应用于输入生命周期
 - 规则2，3应用于输出生命周期
 - 如果编译器完成3个规则的检查，仍然无法确定生命周期，那么就报错
 - 这些规则适用于`fn`和`impl`块
 
+```rs
+fn main() {
+    let novel = String::from("Hello Trump. Hello Biden");
+    let first_setence = novel.split('.').next().expect("cannot find ."); // &str
+    let i = ImportantExcerpt {
+        part: first_setence,
+    };
+    i.announce_and_return_part("hello");
+}
+
+struct ImportantExcerpt<'a> {
+    part: &'a str, // part的lifetime长于结构体实例
+}
+
+impl<'a> ImportantExcerpt<'a> {
+    fn level(&self) -> i32 {
+        123466
+    }
+
+    // 因为不是泛型，并且有self, 那么自动将self的生命周期赋予给输出生命周期
+    fn announce_and_return_part(&self, announcement:&str)->&str {
+        println!("Attention please: {}", announcement);
+        self.part
+    }
+}
+```
+
+前文泛型的生命周期解释
+
+```rs
+struct Point {
+    x: i32,
+    y: f64,
+}
+
+struct Rectangle<'a> {
+    width: &'a i32,
+    height: &'a f64,
+}
+
+impl Point {
+    fn mixup<'a>(&'a self, other: &'a Point) -> Rectangle {
+        // 不同的struct，所以规则3不适用
+        Rectangle {
+            width: &self.x,
+            height: &other.y,
+        }
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 10, y: 20.2 }; // <i32, f64>
+    let p2 = Point { x: 100, y: 120.2 }; // <i32, f64>
+    let p3 = p1.mixup(&p2);
+    println!("{}-{}", p1.x, p1.y); // 10-20.2
+    println!("{}-{}", p2.x, p2.y); // hello-c
+    println!("{}-{}", p3.width, p3.height); // 10-c
+}
+```
