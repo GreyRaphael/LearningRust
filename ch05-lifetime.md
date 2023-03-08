@@ -4,6 +4,7 @@
   - [dangling reference](#dangling-reference)
   - [lifetime specifier](#lifetime-specifier)
   - [lifetime with struct](#lifetime-with-struct)
+  - [lifetime rules](#lifetime-rules)
 
 生命周期: 让**引用**保持有效的作用域
 > 生命周期目的是为了避免`dangling reference`
@@ -184,3 +185,16 @@ struct ImportantExcerpt<'a> {
     part: &'a str, // part的lifetime长于结构体实例
 }
 ```
+
+## lifetime rules
+
+编译器使用3个规则，在没有显式标注生命周期的情况下，来确定生命周期
+1. 每个引用类型的参数都有自己的生命周期。如果输入参数是2个，那么就有2个生命周期
+2. 如果只有1个输入生命周期参数，那么该生命周期被赋予所有的输出生命周期参数
+3. 如果有多个输入生命周期参数，但其中一个是`&self`或者`&mut self`，那么self的生命周期会赋予所有的输出生命周期
+
+- 规则1应用于输入生命周期
+- 规则2，3应用于输出生命周期
+- 如果编译器完成3个规则的检查，仍然无法确定生命周期，那么就报错
+- 这些规则适用于`fn`和`impl`块
+
