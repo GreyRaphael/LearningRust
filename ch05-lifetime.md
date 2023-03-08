@@ -5,6 +5,8 @@
   - [lifetime specifier](#lifetime-specifier)
   - [lifetime with struct](#lifetime-with-struct)
   - [lifetime rules](#lifetime-rules)
+    - [`'static` lifetime](#static-lifetime)
+  - [lifetime with generics](#lifetime-with-generics)
 
 生命周期: 让**引用**保持有效的作用域
 > 生命周期目的是为了避免`dangling reference`
@@ -255,5 +257,34 @@ fn main() {
     println!("{}-{}", p1.x, p1.y); // 10-20.2
     println!("{}-{}", p2.x, p2.y); // hello-c
     println!("{}-{}", p3.width, p3.height); // 10-c
+}
+```
+
+### `'static` lifetime
+
+静态生命周期，整个程序的持续时间
+> 比如字符串字面值, `let s1:&'static str="hello world";`
+
+## lifetime with generics
+
+生命周期也是泛型的一种，所以他们放到同一个`<>`里面
+
+```rs
+use std::fmt::Display;
+
+fn longest_with_announcement<'a, T: Display>(x: &'a str, y: &'a str, ann: T) -> &'a str {
+    println!("Announce, {}", ann);
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+
+fn main() {
+    let res = longest_with_announcement("Donarld Trump", "Biden", "info");
+    println!("{}", res);// Donarld Trump
+    let res = longest_with_announcement("Donarld Trump", "Biden", 100);
+    println!("{}", res);// Donarld Trump
 }
 ```
