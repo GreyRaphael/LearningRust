@@ -4,6 +4,7 @@
 - [basic usage](#basic-usage)
 - [Polymorphism](#polymorphism)
   - [trait as parameter](#trait-as-parameter)
+  - [trait as return](#trait-as-return)
 
 > Trait: 告诉编译器，某种类型具有哪些并且可以与其它类型共享的功能。**抽象地定义共享行为**，与其他语言中的interface有点类似
 
@@ -273,5 +274,19 @@ where
     U: Clone + Debug,
 {
     println!("Breaking New, {}", a.summarize1());
+}
+```
+
+### trait as return
+
+```rs
+pub fn notify6(s:&str)->impl Summary {
+    // 只能返回一种类型，如果采用bool判断，进而返回不同的类型，会报错
+    NewsArticle{
+        headline:String::from("Trump win!"),
+        content:String::from("Trump win the 2024 election!"),
+        author: String::from("Joe Biden"),
+        location: String::from("Washington Dc"),
+    }
 }
 ```
