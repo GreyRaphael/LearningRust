@@ -5,7 +5,8 @@
 - [Polymorphism](#polymorphism)
   - [trait as parameter](#trait-as-parameter)
   - [trait as return](#trait-as-return)
-  - [trait `PartialOrd`](#trait-partialord)
+  - [trait example](#trait-example)
+  - [conditional trait bound, `impl<T>`](#conditional-trait-bound-implt)
 
 > Trait: 告诉编译器，某种类型具有哪些并且可以与其它类型共享的功能。**抽象地定义共享行为**，与其他语言中的interface有点类似
 
@@ -292,7 +293,7 @@ pub fn notify6(s:&str)->impl Summary {
 }
 ```
 
-### trait `PartialOrd`
+### trait example
 
 改造之前的`get_largest2`函数，使之能够处理`>`
 > 如果容器里面的元素，实现了`Copy` trait，元素保存在stack, 那么可以使用下面的例子
@@ -360,7 +361,7 @@ fn main() {
 }
 ```
 
-保持p1和p2的所有权, method1, 要求Copy trait, 只能处理stack上面的数据
+example: 保持p1和p2的所有权, method1, 要求Copy trait, 只能处理stack上面的数据
 > 处理heap上面的数据，同理，需要使用`Clone`和`.clone()`
 
 ```rs
@@ -388,7 +389,7 @@ fn main() {
 }
 ```
 
-保持p1和p2的所有权, method2, 只使用reference
+example: 保持p1和p2的所有权, method2, 只使用reference
 
 ```rs
 struct Point<T, U> {
@@ -414,5 +415,49 @@ fn main() {
     println!("{}-{}", p1.x, p1.y); // 10-20.2
     println!("{}-{}", p2.x, p2.y); // hello-c
     println!("{}-{}", p3.x, p3.y); // 10-c
+}
+```
+
+### conditional trait bound, `impl<T>`
+
+```rs
+use std::fmt::Display;
+
+struct Pair<T> {
+    x: T,
+    y: T,
+}
+
+// impl<T>, 无论T是何种类型，都有new
+impl<T> Pair<T> {
+    fn new(x: T, y: T) -> Self {
+        Self { x: x, y: y }
+    }
+}
+
+// impl<T: Display + PartialOrd>, 只有T实现了Display + PartialOrd，才有一个cmp_display函数
+impl<T: Display + PartialOrd> Pair<T> {
+    fn cmp_display(&self) {
+        if self.x > self.y {
+            println!("x is larger, {}", self.x);
+        } else {
+            println!("y is larger, {}", self.x);
+        }
+    }
+}
+
+fn main() {
+    let p1 = Pair { x: 10, y: 20 };
+    p1.cmp_display();
+    let p2 = Pair {
+        x: String::from("Trump"),
+        y: String::from("Biden"),
+    };
+    p2.cmp_display();
+
+    let p3 = Pair::new(12.5, 10.0); // 因为new没有self, 只能通过Pair::new调用
+    p3.cmp_display();
+
+    Pair::cmp_display(&p2);
 }
 ```
