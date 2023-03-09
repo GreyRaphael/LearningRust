@@ -4,6 +4,7 @@
   - [command line arguments](#command-line-arguments)
   - [refractor](#refractor)
   - [Test-Driven Development](#test-driven-development)
+  - [ouput](#ouput)
 
 
 ## command line arguments
@@ -266,3 +267,9 @@ Trust me";
     }
 }
 ```
+
+## ouput
+
+`>`：标准输出重定向, e.g. `cargo run > output.txt`
+- `println!`: stdout，所有结果都可以重定向到文件
+- `eprintln!`: stderr, 错误输出在显示器上，正确的结果可以重定向到文件
