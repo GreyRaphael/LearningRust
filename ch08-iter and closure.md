@@ -4,6 +4,8 @@
   - [Closure](#closure)
     - [Closure with generic](#closure-with-generic)
     - [Closure capture](#closure-capture)
+  - [Iterator](#iterator)
+    - [custom iterator](#custom-iterator)
 
 闭包: 可以捕获其所在环境的匿名函数
 - 匿名函数
@@ -220,4 +222,112 @@ fn main() {
     // println!("{}", x);// x失去所有权
 }
 ```
+
+## Iterator
+
+所有的迭代器都实现了`Iterator` trait，定义大致是
+- 实现Iterator trait需要定义一个Item类型，它用于`next`方法的返回类型(迭代器的返回类型)
+- Iterator trait仅仅要求实现`next`方法，返回结果包裹在`Some`里面，迭代结束，返回`None`
+
+```rs
+pub trait Iterator{
+    type Item;
+    fn next(&mut self)->Option<Self::Item>;
+}
+```
+
+simple example
+
+```rs
+fn main() {
+    let v1 = vec![1, 2, 3, 4];
+    for item in v1 {
+        // i32
+        println!("{}", item);
+    }
+
+    let v2 = vec![11, 22, 33, 44];
+    let it2 = v2.iter();
+    for item in it2 {
+        // &i32
+        println!("{}", item);
+    }
+}
+```
+
+```rs
+fn main() {
+    let v1 = vec![1, 2, 3];
+    let mut it1 = v1.iter(); //  必须是mut，因为消耗迭代器，内部发生了改变, 上面的for是因为取得了所有权
+
+    assert_eq!(it1.next(), Some(&1));
+    assert_eq!(it1.next(), Some(&2));
+    assert_eq!(it1.next(), Some(&3));
+    assert_eq!(it1.next(), None);
+}
+``` 
+
+summary：
+- `iter`: 迭代不可变引用
+- `into_iter`: 创建的迭代器会获取所有权
+- `iter_mut`: 迭代可变引用
+
+消耗迭代器
+
+```rs
+fn main() {
+    let v1 = vec![1, 2, 3];
+    let mut it1 = v1.iter();
+    let total: i32 = it1.sum(); // 耗尽迭代器
+    println!("{}", total); //6
+}
+```
+
+产生其他迭代器，比如map
+- map接收一个闭包，闭包作用于每个元素
+- 最终组成一个新的迭代器
+
+```rs
+fn main() {
+    let v1 = vec![1, 2, 3];
+    let result: Vec<i32> = v1.iter().map(|x| x + 1).collect();
+    println!("{:?}", result); // [2, 3, 4]
+}
+```
+
+`filter`
+
+```rs
+fn main() {
+    let shoes = vec![
+        Shoe {
+            size: 10,
+            style: String::from("sneaker"),
+        },
+        Shoe {
+            size: 13,
+            style: String::from("sandal"),
+        },
+        Shoe {
+            size: 10,
+            style: String::from("boot"),
+        },
+    ];
+
+    let fittable_shoes = shoes_in_my_size(shoes, 10);
+    println!("{:?}", fittable_shoes); // [Shoe { size: 10, style: "sneaker" }, Shoe { size: 10, style: "boot" }]
+}
+
+#[derive(Debug)]
+struct Shoe {
+    size: u32,
+    style: String,
+}
+
+fn shoes_in_my_size(shoes: Vec<Shoe>, shoe_size: u32) -> Vec<Shoe> {
+    shoes.into_iter().filter(|x| x.size == shoe_size).collect()
+}
+```
+
+### custom iterator
 
