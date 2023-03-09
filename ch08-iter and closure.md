@@ -3,6 +3,7 @@
 - [Iterator and Closure](#iterator-and-closure)
   - [Closure](#closure)
     - [Closure with generic](#closure-with-generic)
+    - [Closure capture](#closure-capture)
 
 闭包: 可以捕获其所在环境的匿名函数
 - 匿名函数
@@ -182,3 +183,41 @@ fn main() {
     println!("{}", v2); // 2
 }
 ```
+
+### Closure capture
+
+闭包能够访问定义它的作用域的变量，而普通函数不行
+> 这个捕获的过程会产生额外的内存开销
+
+```rs
+fn main() {
+    let x = 4;
+    let clos1 = |z| z == x;
+
+    // // 函数无法访问x，但是闭包可以访问x
+    // fn func(z: i32) -> bool {
+    //     z == x
+    // }
+
+    let y = 4;
+    assert!(clos1(y));
+}
+```
+
+与函数获取参数的方式一样, 创建闭包时，Rust会推断出具体使用下面的哪种闭包
+> 所有实现`Fn`的都实现了`FnMut`，所有实现了`FnMut`的都实现了`FnOnce`
+- 取得所有权: FnOnce, 所有的闭包都实现了`FnOnce`
+- 可变借用: FnMut，没有移动**捕获变量**的实现了`FnMut`
+- 不可变借用: Fn，无需可变访问**捕获变量**的闭包实现了`Fn`
+
+闭包在参数列表前使用`move`关键字，可以强制取得它在所使用环境的控制权
+- 当讲闭包传递给新线程，以移动数据使其归新线程所有，最为有用
+
+```rs
+fn main() {
+    let x = vec![1, 2, 3];
+    let clos1 = move |z| z == x;
+    // println!("{}", x);// x失去所有权
+}
+```
+
