@@ -432,3 +432,38 @@ fn it_adds_three() {
     assert_eq!(5, adder::add_two(3));
 }
 ```
+
+example: 集成测试里面的非测试的用于帮助的模块放到tests的子目录
+
+```bash
+.
+├── Cargo.lock
+├── Cargo.toml
+├── src
+│   └── lib.rs
+└── tests
+    ├── another_integration_test.rs
+    ├── common
+    │   └── mod.rs
+    └── integration_test.rs
+```
+
+```rs
+// mod.rs
+pub fn test_helper() {
+    println!("this is a helper");
+}
+```
+
+```rs
+// integraton_tsts.rs
+use adder;
+mod common;
+
+// integration test
+#[test]
+fn it_adds_two() {
+    common::test_helper();
+    assert_eq!(6, adder::add_two(2));
+}
+```
