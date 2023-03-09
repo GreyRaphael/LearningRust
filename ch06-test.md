@@ -2,6 +2,7 @@
 
 - [Rust test](#rust-test)
   - [`assert`](#assert)
+  - [`assert_eq!`, `assert_ne!`](#assert_eq-assert_ne)
 
 3A操作
 - Arrange: 准备数据、状态
@@ -85,6 +86,59 @@ mod tests {
             width: 1,
         };
         assert!(!smaller.can_hold(&larger));
+    }
+}
+
+#[derive(Debug)]
+pub struct Rectangle {
+    length: u32,
+    width: u32,
+}
+
+impl Rectangle {
+    pub fn can_hold(&self, other: &Rectangle) -> bool {
+        self.length > other.length && self.width > other.width
+    }
+}
+```
+
+## `assert_eq!`, `assert_ne!`
+
+判断两个参数是否`==` or `!=`
+> 断言失败，使用debug模式打印参数，要求参数实现了PartialEq和Debug Traits(所有的基本类型都实现了，自定义类型需要自己实现)  
+
+```rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn larger_can_hold_smaller() {
+        let larger = Rectangle {
+            length: 8,
+            width: 7,
+        };
+        let smaller = Rectangle {
+            length: 1,
+            width: 8,
+        };
+        // assert!(larger.can_hold(&smaller));
+        assert_eq!(true, larger.can_hold(&smaller));
+    }
+
+    #[test]
+    fn smaller_cannot_hold_larger() {
+        let larger = Rectangle {
+            length: 8,
+            width: 7,
+        };
+        let smaller = Rectangle {
+            length: 5,
+            width: 1,
+        };
+        // assert!(!smaller.can_hold(&larger));
+        // assert_eq!(false, smaller.can_hold(&larger));
+        assert_ne!(true, smaller.can_hold(&larger)); // 两个参数顺序可以调换，一般将期待值放在左边
     }
 }
 
