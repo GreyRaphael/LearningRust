@@ -4,6 +4,7 @@
   - [`assert`](#assert)
   - [`assert_eq!`, `assert_ne!`](#assert_eq-assert_ne)
   - [custom information](#custom-information)
+  - [`should_panic`](#should_panic)
 
 3A操作
 - Arrange: 准备数据、状态
@@ -179,4 +180,72 @@ pub fn greeting(name: &str) -> String {
 }
 ```
 
- 
+## `should_panic`
+
+除了验证返回值是否正确，还需验证是否发生panic, 可以添加`should_panic`属性
+- 发生panic，测试通过
+- 未发生panic，测试不通过
+
+```rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn greater_than_100() {
+        Guess::new(101);
+    }
+}
+
+pub struct Guess {
+    value: u32,
+}
+
+impl Guess {
+    pub fn new(value: u32) -> Guess {
+        if value < 1 || value > 100 {
+            panic!("value must be [1, 100]");
+        }
+        Guess { value }
+    }
+}
+```
+
+让`should_panic`更加仔细, 只期待一部分
+
+```rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "value should be >0")]
+    fn less_than_1() {
+        // Guess::new(0); // pass
+        Guess::new(200); // fail
+    }
+
+    #[test]
+    #[should_panic(expected = "value should be <101")]
+    fn greater_than_100() {
+        // Guess::new(200);//pass
+        Guess::new(0); //fail
+    }
+}
+
+pub struct Guess {
+    value: u32,
+}
+
+impl Guess {
+    pub fn new(value: u32) -> Guess {
+        if value < 1 {
+            panic!("value should be >0, got {}", value)
+        } else if value > 100 {
+            panic!("value should be <101, got {}", value)
+        }
+        Guess { value }
+    }
+}
+```
