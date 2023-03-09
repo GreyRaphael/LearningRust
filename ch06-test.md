@@ -5,6 +5,7 @@
   - [`assert_eq!`, `assert_ne!`](#assert_eq-assert_ne)
   - [custom information](#custom-information)
   - [`should_panic`](#should_panic)
+  - [`Result<T, E>`](#resultt-e)
 
 3A操作
 - Arrange: 准备数据、状态
@@ -246,6 +247,28 @@ impl Guess {
             panic!("value should be <101, got {}", value)
         }
         Guess { value }
+    }
+}
+```
+
+## `Result<T, E>`
+
+无需panic,使用`Result<T, E>`作为返回类型来测试
+- 返回Ok，pass
+- 返回Err, fail
+
+```rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() -> Result<(), String> {
+        if 2 + 2 == 4 {
+            Ok(())
+        } else {
+            Err(String::from("some error information"))
+        }
     }
 }
 ```
