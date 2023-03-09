@@ -7,6 +7,7 @@
   - [`should_panic`](#should_panic)
   - [`Result<T, E>`](#resultt-e)
   - [`cargo test` parameter](#cargo-test-parameter)
+  - [unit test \& integration test](#unit-test--integration-test)
 
 3A操作
 - Arrange: 准备数据、状态
@@ -341,5 +342,93 @@ mod tests {
     fn expensive_test() {
         assert_eq!(8, 2 + 2 + 2 + 2);
     }
+}
+```
+
+## unit test & integration test
+
+Rust测试分类
+- unit test: `#[cfg(test)]`
+  - 小、专注
+  - 一次对一个模块进行隔离的测试
+  - 可测试private接口或者函数: 比如上文的测试函数有的有`pub`有的没有`pub`
+- integration test: 为了测试被测试库的多个部分是否能够一起正常工作
+  - 集成测试完全位于被测试库的外部
+  - 只能使用public接口，所以集成测试覆盖率很重要
+  - 每个测试中可能使用多个模块
+
+集成测试步骤
+1. 创建目录`tests`， 该目录被特殊对待
+2. tests目录下每个测试文件都是一个单独的crate, 这些文件不共享行为(与src目录不同)
+3. 测试需要导入测试库lib.rs中的东西
+4. 标注`#[test]`
+5. 只有`cargo test`才会编译tests目录下的文件
+   1. 运行某一个特定集成测试: `cargo test function_name`
+      - e.g. `cargo test it_adds_three`
+   2. 运行某个测试文件内所有的测试: `cargo test --test filename`
+      - e.g. `cargo test --test another_integration_test`
+
+
+```bash
+.
+├── Cargo.lock
+├── Cargo.toml
+├── src
+│   └── lib.rs
+└── tests
+    └── integration_test.rs
+    └── another_integration_test.rs
+```
+
+```toml
+# Cargo.toml
+[package]
+name = "adder"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+```
+
+```rs
+// lib.rs
+pub fn add_two(a: i32) -> i32 {
+    internal_adder(a, 2)
+}
+
+fn internal_adder(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        assert_eq!(4, internal_adder(2, 2));
+    }
+}
+```
+
+```rs
+// integration_test.rs
+use adder;
+
+// integration test
+#[test]
+fn it_adds_two() {
+    assert_eq!(4, adder::add_two(2));
+}
+```
+
+```rs
+// another_integration_test.rs
+use adder;
+
+// integration test
+#[test]
+fn it_adds_three() {
+    assert_eq!(5, adder::add_two(3));
 }
 ```
