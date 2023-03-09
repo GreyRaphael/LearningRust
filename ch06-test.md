@@ -317,3 +317,29 @@ fn print_and_return_10(a: i32) -> i32 {
     10
 }
 ```
+
+控制测试函数的数量:
+- `cargo test will_pass`: 只测试`will_pass`函数
+- `cargo test will`: 测试`will`开头的所有函数
+- `cargo test tests`: 测试`mod tests`的所有函数
+
+忽略某些测试`#[ignore]`, `cargo test`就不允许ignored的测试
+> 如果要单独测试`ignore`部分，`cargo test -- --ignored`
+
+```rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        assert_eq!(4, 2 + 2);
+    }
+    #[test]
+    #[ignore = "time cost too much"]
+    // #[ignore] // 也可以不带自定义信息
+    fn expensive_test() {
+        assert_eq!(8, 2 + 2 + 2 + 2);
+    }
+}
+```
