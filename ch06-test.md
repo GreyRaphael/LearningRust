@@ -3,6 +3,7 @@
 - [Rust test](#rust-test)
   - [`assert`](#assert)
   - [`assert_eq!`, `assert_ne!`](#assert_eq-assert_ne)
+  - [custom information](#custom-information)
 
 3A操作
 - Arrange: 准备数据、状态
@@ -154,3 +155,28 @@ impl Rectangle {
     }
 }
 ```
+
+## custom information
+
+- `assert!`宏的第2个参数就是自定义信息
+- `assert_eq!`宏的第3个参数就是自定义信息
+- `assert_ne!`宏的第3个参数就是自定义信息
+
+```rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn greetings_contain_name() {
+        let result = greeting("moris");
+        assert!(result.contains("grey"), "custom info: value={}", result);
+    }
+}
+
+pub fn greeting(name: &str) -> String {
+    format!("Hello, {}", name)
+}
+```
+
+ 
