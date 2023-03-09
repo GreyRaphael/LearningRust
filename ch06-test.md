@@ -6,6 +6,7 @@
   - [custom information](#custom-information)
   - [`should_panic`](#should_panic)
   - [`Result<T, E>`](#resultt-e)
+  - [`cargo test` parameter](#cargo-test-parameter)
 
 3A操作
 - Arrange: 准备数据、状态
@@ -270,5 +271,49 @@ mod tests {
             Err(String::from("some error information"))
         }
     }
+}
+```
+
+## `cargo test` parameter
+
+通过命令行参数改变`cargo test`的行为
+
+默认行为：
+- 并行运行所有测试
+- 测试通过不显示所有输出内容，测试失败才输出大量内容
+
+cmd
+- `cargo test --help`: 获取所有帮助
+- `cargo test -- --help`: 可以使用`--`的参数，有一个编译的过程
+
+并行测试：默认状态
+- 多个线程并行运行
+- 要确保多个测试之间，不会相互依赖
+- 要确保多个测试，不依赖某个共享的状态(环境、工作目录、环境变量....)
+
+串行测试: `cargo test -- --test-threads=1`
+
+测试代码中用了`println!`, 如果要全部显示`cargo test -- --show-output`
+- 测试pass, 不打印`println!`的内容
+- 测试fail, 打印`println!`的内容
+
+```rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn will_pass() {
+        assert_eq!(10, print_and_return_10(4));
+    }
+    #[test]
+    fn will_fail() {
+        assert_eq!(200, print_and_return_10(8));
+    }
+}
+
+fn print_and_return_10(a: i32) -> i32 {
+    println!("I got a value={}", a);
+    10
 }
 ```
