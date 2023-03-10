@@ -4,6 +4,7 @@
   - [introduction](#introduction)
   - [`Box<T>`](#boxt)
   - [Deref coercion](#deref-coercion)
+  - [Drop Trait](#drop-trait)
 
 ## introduction
 
@@ -164,4 +165,41 @@ fn main() {
     // &b1作为参数传入，发生Deref coercion；调用deref, 将&MyBox<String>转化为&String
     hello(&b1); //ok, Deref coercion
 }
+```
+
+## Drop Trait
+
+- 常用于文件、网络资源的释放
+- 任何类型都能实现Drop Trait
+- Drop Trait只要求实现`drop`方法
+
+```rs
+struct CustomSmartPointer {
+    data: String,
+}
+
+impl Drop for CustomSmartPointer {
+    fn drop(&mut self) {
+        println!("Dropping, {}", self.data);
+    }
+}
+
+fn main() {
+    let c1 = CustomSmartPointer {
+        data: String::from("Biden"),
+    };
+    let c2 = CustomSmartPointer {
+        data: String::from("Trump"),
+    };
+    let c3 = CustomSmartPointer {
+        data: String::from("John"),
+    };
+    drop(c3); // 库函数提前清理c3
+    println!("Smart Pointer Created");
+}
+// // output:
+// Dropping, John
+// Smart Pointer Created
+// Dropping, Trump
+// Dropping, Biden
 ```
