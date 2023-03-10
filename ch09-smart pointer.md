@@ -3,6 +3,7 @@
 - [Smart Pointer](#smart-pointer)
   - [introduction](#introduction)
   - [`Box<T>`](#boxt)
+  - [Deref coercion](#deref-coercion)
 
 ## introduction
 
@@ -113,5 +114,54 @@ fn main() {
     let b3 = MyBox::new(100);
     println!("{:?}", b3); // MyBox(100)
     println!("{}", *b3); // 100, 相当于 *(b3.deref())
+}
+```
+
+## Deref coercion
+
+> 隐式解引用转化
+- 当把某类型的引用传递给函数或方法的时候，它的类型与函数的参数类型不匹配，Deref Coercion就会发生
+- 编译器对deref进行一系列调用，在编译时完成，没有额外的性能开销
+
+```rs
+use std::ops::Deref;
+
+#[derive(Debug)]
+struct MyBox<T>(T);
+
+impl<T> MyBox<T> {
+    fn new(x: T) -> MyBox<T> {
+        MyBox(x)
+    }
+}
+
+impl<T> Deref for MyBox<T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.0
+    }
+}
+
+fn hello(name: &str) {
+    println!("hello, {}", name);
+}
+
+fn main() {
+    let b1 = MyBox::new(String::from("Biden")); // MyBox<String>
+    println!("{:?}", b1); // MyBox("Biden")
+    println!("{}", *b1); // *b1 is String
+
+    let s1 = String::from("Trump");
+    hello("Grey"); // input is &str
+    // hello(s1); // error, iput is String
+    hello(&s1); // input is &String
+    hello(&s1[..]); // input is &str
+
+    // hello(*b1); // error
+    hello(&(*b1)); // input is &String
+    hello(&(*b1)[..]); // input is &str
+    // &b1   &MyBox<String>
+    // &b1作为参数传入，发生Deref coercion；调用deref, 将&MyBox<String>转化为&String
+    hello(&b1); //ok, Deref coercion
 }
 ```
