@@ -6,6 +6,7 @@
     - [Closure capture](#closure-capture)
   - [Iterator](#iterator)
     - [custom iterator](#custom-iterator)
+    - [modify `minigrep` with iterator](#modify-minigrep-with-iterator)
 
 闭包: 可以捕获其所在环境的匿名函数
 - 匿名函数
@@ -371,5 +372,75 @@ fn using_other_iterator_trait_methods() {
         .filter(|x| x % 3 == 0)
         .sum();
     println!("{}", result);
+}
+```
+
+### modify `minigrep` with iterator
+
+iterator改造[minigrep](ch07-io.md#test-driven-development)例子
+
+```rs
+// main.rs
+use minigrep::Config;
+use std::env;
+use std::process;
+
+fn main() {
+    // env::args()本身就是iterator，函数new取得iter所有权，进而可以取得输入参数的所有权
+    let config = Config::new(env::args()).unwrap_or_else(|err| {
+        println!("Problem parsing arguments: {}", err);
+        process::exit(1);
+    });
+    println!("config={:?}", config);
+
+    if let Err(e) = minigrep::run(config) {
+        println!("Application error: {}", e);
+        process::exit(1);
+    }
+}
+```
+
+```rs
+// lib.rs
+impl Config {
+    // 因为错误信息是字符串字面值，所以用'static
+    pub fn new(mut args: env::Args) -> Result<Config, &'static str> {
+        if args.len() < 3 {
+            return Err("not enough arguments");
+        }
+        args.next(); // 忽略输入的第一个元素
+        let query = match args.next() {
+            Some(x) => x,
+            None => return Err("didnot get a query string"),
+        };
+        let filename = match args.next() {
+            Some(x) => x,
+            None => return Err("didnot get a filename string"),
+        };
+
+        // 如果这个环境变量CASE_INSENSITIVE出现，那么is_err()就是alse; 不出现就是true
+        let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
+        Ok(Config {
+            query: query,
+            filename: filename,
+            case_sensitive: case_sensitive,
+        })
+    }
+}
+
+pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    // contenst.lines()本身也是iterator
+    contents
+        .lines()
+        .filter(|line| line.contains(query))
+        .collect()
+}
+
+pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    let query = query.to_lowercase();
+    contents
+        .lines()
+        .filter(|line| line.to_lowercase().contains(&query))
+        .collect()
 }
 ```
