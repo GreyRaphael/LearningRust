@@ -5,18 +5,15 @@
   - [`Box<T>`](#boxt)
   - [Deref coercion](#deref-coercion)
   - [Drop Trait](#drop-trait)
+  - [`Rc<T>`](#rct)
 
 ## introduction
 
 > rust最常见的指针就是**引用**: `&`
 
 智能指针: 比如`String`, `Vec<T>`
-- 行为于指针类似, 拥有一片内存，并允许用户对齐操作
+- 行为于指针类似, 拥有一片内存，并允许用户对其操作
 - 有额外的元数据和功能，比如`capacity, length`
-
-reference counting智能指针:
-- 记录所有者的数量，使得一份数据被多个所有者持有
-- 所有者数量为0的时候，自动清理数据
 
 引用 vs 智能指针
 - 引用只是借用
@@ -202,4 +199,110 @@ fn main() {
 // Smart Pointer Created
 // Dropping, Trump
 // Dropping, Biden
+```
+
+## `Rc<T>`
+
+Reference Counted Smart Pointer, 引用计数智能指针:
+> 只能用于单线程的场景
+- 记录所有者的数量，使得一份数据被多个所有者持有
+- 所有者数量为0的时候，自动清理数据
+
+常用方法
+- `Rc::clone(&a)`: 增加引用计数
+- `Rc::strong_count(&a)`: 获取引用计数
+- `Rc::weak_count(&a)`
+
+example: 两个指针指向同一个List
+
+```rs
+// 错误示例
+use std::rc::Rc;
+use List::{Cons, Nil}; // 使用自定义的mod
+
+fn main() {
+    // 递归创建链表
+    let li1 = Cons(11, Box::new(Cons(22, Box::new(Cons(33, Box::new(Nil))))));
+
+    let li2 = Cons(100, Box::new(li1));
+    // let li3 = Cons(100, Box::new(li1)); // error, li1 moved
+}
+
+enum List {
+    Cons(i32, Box<List>),
+    Nil, // 链表结尾
+}
+```
+
+```rs
+// 解决方案1：改变List为ref
+use List::{Cons, Nil}; // 使用自定义的mod
+
+fn main() {
+    // 递归创建链表，需要保存临时值无法通过下面方法创建
+    // 因为临时变量所有权被丢弃
+    // let li1 = Box::new(Cons(22, &Box::new(Cons(33, &Box::new(Nil))))); // Box<List>
+
+    let p1=Box::new(Nil);
+    let c1=Cons(33, &p1);
+    let p2=Box::new(c1);
+    let c2=Cons(22, &p2);
+    let p3=Box::new(c2);
+
+    let li2 = Cons(100, &p3);
+    let li3 = Cons(100, &p3); // error, li1 moved
+}
+
+enum List<'a> {
+    Cons(i32, &'a Box<List<'a>>),
+    Nil, // 链表结尾
+}
+```
+
+> `Rc<T>`通过**不可变引用**，使得程序不同部分之间共享只读数据
+
+```rs
+// 解决方案2： Rc
+use std::rc::Rc;
+use List::{Cons, Nil}; // 使用自定义的mod
+
+fn main() {
+    // 递归创建链表
+    let li1 = Rc::new(Cons(22, Rc::new(Cons(33, Rc::new(Nil))))); // Rc<List>
+    // li1.clone(); // 深拷贝，不合适
+
+    let li2 = Cons(100, Rc::clone(&li1)); // clone,引用计数+1，不进行深拷贝
+    let li3 = Cons(100, Rc::clone(&li1));
+}
+
+enum List {
+    Cons(i32, Rc<List>),
+    Nil, // 链表结尾
+}
+```
+
+`strong_count`
+
+```rs
+use std::rc::Rc;
+use List::{Cons, Nil};
+
+fn main() {
+    // 递归创建链表
+    let li1 = Rc::new(Cons(22, Rc::new(Cons(33, Rc::new(Nil))))); // Rc<List>
+    println!("count={}", Rc::strong_count(&li1)); //1
+
+    let li2 = Cons(100, Rc::clone(&li1));
+    println!("count={}", Rc::strong_count(&li1)); //2
+    {
+        let li3 = Cons(100, Rc::clone(&li1));
+        println!("count={}", Rc::strong_count(&li1)); //3
+    }
+    println!("count={}", Rc::strong_count(&li1)); //2
+}
+
+enum List {
+    Cons(i32, Rc<List>),
+    Nil,
+}
 ```
