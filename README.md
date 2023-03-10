@@ -66,6 +66,27 @@ cargo build --release
 cargo update
 ```
 
+Cargo主要两个profile
+1. dev profile: `cargo build`
+2. release profile: `cargo build --release`
+
+自定义[profile](https://doc.rust-lang.org/cargo/reference/profiles.html)
+
+```toml
+[package]
+name = "minigrep"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
+```
+
 ## Guess Game
 
 ```toml
