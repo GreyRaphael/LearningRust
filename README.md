@@ -13,6 +13,7 @@
     - [Package](#package)
     - [module to different files](#module-to-different-files)
     - [`pub use`](#pub-use)
+    - [Cargo workspace](#cargo-workspace)
 
 ## Preparation
 
@@ -540,4 +541,81 @@ pub use self::mod1::mod2::mod3::Secondary
 // main.rs
 use crate_name::Primary
 use crate_name::Secondary
+```
+
+### Cargo workspace
+
+> 如果一个项目有多个library和一个binary(含有main.rs的project)；它们彼此还有依赖，使用的时候每次都得独立编译，很麻烦；这个时候就采用workspace
+
+```toml
+# workspace Cargo.toml
+[workspace]
+members=[
+    "adder",
+    "add-one",
+    "add-two",
+]
+```
+
+```bash
+mkdir workspace1
+# create workspace Cargo.toml
+
+cargo new adder
+cargo new add-one --lib
+cargo new add-two --lib
+```
+
+```bash
+workspace1/
+├── adder
+│   ├── Cargo.toml
+│   └── src
+│       └── main.rs
+├── add-one
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+├── add-two
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+└── Cargo.toml
+```
+
+```toml
+# adder/Cargo.toml
+[package]
+name = "adder"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+add-one={path="../add-one"}
+add-two={path="../add-two"}
+```
+
+```rs
+// adder/src/main.rs
+use add_one; // cargo将add-one变成了add_one
+
+fn main() {
+    let num=10;
+    println!("result={}", add_one::add_one(num));
+}
+```
+
+```rs
+// add-one/src/lib.rs
+pub fn add_one(x: i32) -> i32 {
+    x + 1
+}
+```
+
+```bash
+cargo build
+cargo run -p adder # 单独运行adder
+cargo run # 也可以这么运行
+cargo test # 测试所有
+cargo test -p add-one #只测试add-one 
 ```
