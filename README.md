@@ -524,7 +524,7 @@ fn seat_at_table() {}
 // main.rs
 use crate_name::mod1::mod2::mod3::Primary
 use crate_name::mod1::mod2::mod3::Secondary
-``
+```
 
 程序员写的代码多个层级，比较清晰；但是使用者难以找到某个类型；每次使用都得进入好几层
 > 需要通过`pub use`暴露内部的api, 方便直接调用
@@ -540,4 +540,4 @@ pub use self::mod1::mod2::mod3::Secondary
 // main.rs
 use crate_name::Primary
 use crate_name::Secondary
-``
+```
