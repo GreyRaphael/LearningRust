@@ -6,6 +6,7 @@
   - [Deref coercion](#deref-coercion)
   - [Drop Trait](#drop-trait)
   - [`Rc<T>`](#rct)
+  - [`RefCell<T>`](#refcellt)
 
 ## introduction
 
@@ -306,3 +307,6 @@ enum List {
     Nil,
 }
 ```
+
+## `RefCell<T>`
+
