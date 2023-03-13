@@ -8,6 +8,7 @@
   - [`Rc<T>`](#rct)
   - [`RefCell<T>` and Interior mutability](#refcellt-and-interior-mutability)
     - [`Rc<T>` with `RefCell<T>`](#rct-with-refcellt)
+  - [Memory Leak](#memory-leak)
 
 ## introduction
 
@@ -494,6 +495,47 @@ fn main() {
     println!("a={:?}", a);
     println!("b={:?}", b);
     println!("c={:?}", c); // c=Cons(RefCell { value: 10 }, Cons(RefCell { value: 15 }, Nil))
+}
+```
+
+## Memory Leak
+
+Rust的内存安全机制可以保证很难发生内存泄漏，但可以使用`Rc<T>`和`RefCell<T>`可以创造循环引用，导致内存泄漏
+
+```rs
+use crate::List::{Cons, Nil};
+use std::{cell::RefCell, rc::Rc};
+
+#[derive(Debug)]
+enum List {
+    Cons(i32, RefCell<Rc<List>>),
+    Nil,
+}
+
+impl List {
+    fn tail(&self) -> Option<&RefCell<Rc<List>>> {
+        match self {
+            Cons(_, item) => Some(item),
+            Nil => None,
+        }
+    }
+}
+
+fn main() {
+    let a = Rc::new(Cons(5, RefCell::new(Rc::new(Nil))));
+    println!("count={}, next item={:?}", Rc::strong_count(&a), a.tail()); // count=1, next item=Some(RefCell { value: Nil })
+
+    let b = Rc::new(Cons(10, RefCell::new(Rc::clone(&a))));
+    println!("count={}, next item={:?}", Rc::strong_count(&a), a.tail()); // count=2, next item=Some(RefCell { value: Nil })
+    println!("count={}, next item={:?}", Rc::strong_count(&b), b.tail()); // count=1, next item=Some(RefCell { value: Cons(5, RefCell { value: Nil }) })
+
+    if let Some(link) = a.tail() {
+        *link.borrow_mut() = Rc::clone(&b);
+    }
+    println!("count={}", Rc::strong_count(&a)); // count=2
+    println!("count={}", Rc::strong_count(&b)); // count=2
+
+    println!("a next time={:?}", a.tail()); // stack overflow
 }
 ```
 
