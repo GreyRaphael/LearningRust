@@ -3,6 +3,7 @@
 - [Rust Concurrency and Parallel](#rust-concurrency-and-parallel)
   - [Thread](#thread)
   - [Message Passing](#message-passing)
+  - [Shared-State Concurrency](#shared-state-concurrency)
 
 ## Thread
 
@@ -157,3 +158,109 @@ fn main() {
     }
 }
 ```
+
+## Shared-State Concurrency
+
+通过共享内存来并发
+- channel类似**单所有权**，一旦所有权转移至Channel，就无法使用原变量
+- 共享状态并发类似**多所有权**，多个线程可以同时访问同一块内存
+
+Mutex: Mutual exclusion
+> 同一时刻，只允许一个线程来访问数据
+- 使用数据前，必须尝试获取mutex
+- 使用完mutex, 必须对数据解锁，以便其它线程可以获取锁
+- Mutex::new()创建`Mutex<T>`，本质是智能指针
+- `.lock()`函数返回`MutexGuard`,实现了`Dref`, `Drop`
+
+```rs
+use std::sync::Mutex;
+
+fn main() {
+    let m = Mutex::new(5);
+    {
+        let mut num = m.lock().unwrap();
+        *num = 6;
+    } // MutexGuard发生drop
+    println!("m={:?}", m); // m=Mutex { data: 6, poisoned: false, .. }
+}
+```
+
+多重所有权+多线程
+> `Rc<T>` + `Thread`: 仅仅使用单线程  
+> `Arc<T>` + `Thread`: Atomic
+
+```rs
+use std::{sync::Mutex, thread, vec, task::Context};
+
+fn main() {
+    let counter = Mutex::new(0);
+    let mut handles = vec![];
+    for _ in 0..10 {
+        // error, 10个线程，第一个线程获取了counter的所有权，后面的没有获得到，所有报错
+        let handle = thread::spawn(move || {
+            let mut num = counter.lock().unwrap();
+            *num += 1;
+        });
+        handles.push(handle);
+    }
+
+    for h in handles {
+        h.join().unwrap();
+    }
+    println!("Result={}", counter.lock().unwrap())
+}
+```
+
+```rs
+use std::{rc::Rc, sync::Mutex, thread, vec};
+
+fn main() {
+    let counter = Rc::new(Mutex::new(0));
+    let mut handles = vec![];
+    for _ in 0..10 {
+        // error, Rc仅仅适用于单线程
+        let c = Rc::clone(&counter);
+        let handle = thread::spawn(move || {
+            let mut num = c.lock().unwrap();
+            *num += 1;
+        });
+        handles.push(handle);
+    }
+
+    for h in handles {
+        h.join().unwrap();
+    }
+    println!("Result={}", counter.lock().unwrap())
+}
+```
+
+true example:
+
+```rs
+use std::{
+    sync::{Arc, Mutex},
+    thread, vec,
+};
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+    for _ in 0..10 {
+        let c = Arc::clone(&counter);
+        let handle = thread::spawn(move || {
+            let mut num = c.lock().unwrap();
+            *num += 1;
+        });
+        handles.push(handle);
+    }
+
+    for h in handles {
+        h.join().unwrap();
+    }
+    println!("Result={}", counter.lock().unwrap())
+}
+```
+
+`Mutex<T>`提供了内部可变性，和`Cell`家族一样
+- 使用`RefCell<T>`改变`Rc<T>`里面的内容，有循环引用风险
+- 使用`Mutex<T>`改变`Arc<T>`里面的内容，有死锁风险，
