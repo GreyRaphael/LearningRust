@@ -7,6 +7,7 @@
   - [Drop Trait](#drop-trait)
   - [`Rc<T>`](#rct)
   - [`RefCell<T>` and Interior mutability](#refcellt-and-interior-mutability)
+    - [`Rc<T>` with `RefCell<T>`](#rct-with-refcellt)
 
 ## introduction
 
@@ -463,6 +464,36 @@ mod tests {
         // borrow获取内部值的不可变引用, 返回Ref<T>
         assert_eq!(1, mock_msger.send_messages.borrow().len());
     }
+}
+```
+
+### `Rc<T>` with `RefCell<T>`
+
+实现拥有多重所有权的可变数据
+
+```rs
+use crate::List::{Cons, Nil};
+use std::{cell::RefCell, rc::Rc};
+
+#[derive(Debug)]
+enum List {
+    Cons(Rc<RefCell<i32>>, Rc<List>),
+    Nil,
+}
+
+fn main() {
+    let value = Rc::new(RefCell::new(5));
+    let a = Rc::new(Cons(Rc::clone(&value), Rc::new(Nil)));
+    let b = Cons(Rc::new(RefCell::new(6)), Rc::clone(&a));
+    let c = Cons(Rc::new(RefCell::new(10)), Rc::clone(&a));
+
+    println!("a={:?}", a);
+    println!("b={:?}", b);
+    println!("c={:?}", c); // c=Cons(RefCell { value: 10 }, Cons(RefCell { value: 5 }, Nil))
+    *value.borrow_mut() += 10;
+    println!("a={:?}", a);
+    println!("b={:?}", b);
+    println!("c={:?}", c); // c=Cons(RefCell { value: 10 }, Cons(RefCell { value: 15 }, Nil))
 }
 ```
 
