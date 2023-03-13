@@ -2,6 +2,7 @@
 
 - [Rust Concurrency and Parallel](#rust-concurrency-and-parallel)
   - [Thread](#thread)
+  - [Message Passing](#message-passing)
 
 ## Thread
 
@@ -55,3 +56,29 @@ fn main() {
 }
 ```
 
+## Message Passing
+
+消息传递: 一种很流行且能保证安全并发的技术
+- 线程通过彼此发送消息来进行通信
+- 通过Channel来实现，标准库提供
+
+Channel: 包含发送端和接收端
+- 如果发送端、接收端任意一端被丢弃，那么Channel就关闭
+
+```rs
+use std::sync::mpsc;
+use std::thread;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        let val = String::from("hi");
+        tx.send(val).unwrap();
+    });
+
+    // recv会阻塞当前线程，知道Channel中有数据传过来
+    let received = rx.recv().unwrap();
+    println!("mainthread get: {}", received);
+}
+```
