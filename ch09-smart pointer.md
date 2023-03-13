@@ -6,7 +6,7 @@
   - [Deref coercion](#deref-coercion)
   - [Drop Trait](#drop-trait)
   - [`Rc<T>`](#rct)
-  - [`RefCell<T>`](#refcellt)
+  - [`RefCell<T>` and Interior mutability](#refcellt-and-interior-mutability)
 
 ## introduction
 
@@ -308,5 +308,161 @@ enum List {
 }
 ```
 
-## `RefCell<T>`
+## `RefCell<T>` and Interior mutability
+
+`RefCell<T>`: 代表了对齐持有数据的唯一所有权, 只能用于**单线程**场景
+
+| `Box<T>`         | `RefCell<T>`   |
+|----------------|--------------|
+| 编译阶段强制代码遵守借用规则 | 只会在运行时检查借用规则 |
+| 否则触发错误         | 否则触发panic    |
+
+Rust借用规则
+- 在任何给定时间，要么只拥有一个**可变应用**，要么拥有多个**不可变引用**
+- 引用总是有效的
+
+内部可变性(interior mutability): 允许在只持有**不可变引用**的情况下，对数据进行修改，是Rust的一种设计模式
+> 数据结构中使用了`unsafe`代码，来绕过Rust正常的可变性和借用规则
+
+| **编译阶段检查借用规则**             | **运行时检查借用规则**                   |
+|------------------------|-----------------------------|
+| 尽早暴露问题                 | 问题暴露延后，甚至到生产环境              |
+| 没有任何运行时开销              | 因为借用计数产生些许性能损失              |
+| 对大多数场景都是最佳选择(Rust默认行为) | 实现某些特定的内存安全场景(不可变环境中修改自身数据) |
+
+选择`Box<T>`, `Rc<T>`, `RefCell<T>`依据
+> 所以`RefCell<T>`可以实现不可变环境中修改自身数据
+
+|     | `Box<T>`          | `Rc<T>`        | `RefCell<T>`      |
+|----------|-----------------|--------------|-----------------|
+| 同一数据的所有者 | 一个              | 多个           | 一个              |
+| 可变性、借用检查 | 可变、不可变引用(编译时检查) | 不可变引用(编译时检查) | 可变、不可变引用(运行时检查) |
+
+example: 无法可变借用(`&mut`)一个immutable
+
+```rs
+// lib.rs
+fn main() {
+    let x = 10;
+    let y = &x; // ok
+    // let z = &mut x; // error，无法可变借用(&mut)一个immutable
+}
+```
+
+example: without `RefCell<T>`
+
+```rs
+pub trait Messenger {
+    fn send(&self, msg: &str);
+}
+
+pub struct LimitTracker<'a, T>
+where
+    T: 'a + Messenger,
+{
+    messenger: &'a T,
+    value: usize,
+    max: usize,
+}
+
+impl<'a, T> LimitTracker<'a, T>
+where
+    T: 'a + Messenger,
+{
+    pub fn new(messenger: &T, max: usize) -> LimitTracker<T> {
+        LimitTracker {
+            messenger,
+            value: 0,
+            max,
+        }
+    }
+
+    pub fn set_value(&mut self, value: usize) {
+        self.value = value;
+
+        let percent_of_max = self.value as f64 / self.max as f64;
+        if percent_of_max >= 1.0 {
+            self.messenger.send("Error: you are over 100%");
+        } else if percent_of_max >= 0.9 {
+            self.messenger.send("Urgent: you are over 90%")
+        } else if percent_of_max >= 0.75 {
+            self.messenger.send("Warning: you are over 75%")
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct MockMessenger {
+        send_messages: Vec<String>,
+    }
+
+    impl MockMessenger {
+        fn new() -> MockMessenger {
+            MockMessenger {
+                send_messages: vec![],
+            }
+        }
+    }
+
+    impl Messenger for MockMessenger {
+        fn send(&mut self, msg: &str) { // error, Messenger是&self, immutable，但是这里需要&mut
+            self.send_messages.push(String::from(msg));
+        }
+    }
+
+    #[test]
+    fn it_sends_over75_msg() {
+        let mock_msger = MockMessenger::new();
+        let mut limit_tracker = LimitTracker::new(&mock_msger, 100);
+        limit_tracker.set_value(80);
+        assert_eq!(1, mock_msger.send_messages.len());
+    }
+}
+```
+
+example: with `RefCell<T>`
+> `RefCell<T>`会记录当前存在多少个活跃的`RefMut<T>`和`Ref<T>`; 
+- 每次调用`borrow`，不可变借用计数+1, 离开作用域，不可变借用计数-1
+- 每次调用`borrow_mut`，可变借用计数+1, 离开作用域，可变借用计数-1
+- 以此技术来维护借用检查规则，任何时间只允许拥有多个不可变借用或者一个可变借用
+
+```rs
+#[cfg(test)]
+mod tests {
+    use std::cell::RefCell;
+
+    use super::*;
+
+    struct MockMessenger {
+        send_messages: RefCell<Vec<String>>,
+    }
+
+    impl MockMessenger {
+        fn new() -> MockMessenger {
+            MockMessenger {
+                send_messages: RefCell::new(vec![]),
+            }
+        }
+    }
+
+    impl Messenger for MockMessenger {
+        fn send(&self, msg: &str) {
+            // borrow_mut获取内部值的可变引用，返回RefMut<T>
+            self.send_messages.borrow_mut().push(String::from(msg));
+        }
+    }
+
+    #[test]
+    fn it_sends_over75_msg() {
+        let mock_msger = MockMessenger::new();
+        let mut limit_tracker = LimitTracker::new(&mock_msger, 100);
+        limit_tracker.set_value(80);
+        // borrow获取内部值的不可变引用, 返回Ref<T>
+        assert_eq!(1, mock_msger.send_messages.borrow().len());
+    }
+}
+```
 
