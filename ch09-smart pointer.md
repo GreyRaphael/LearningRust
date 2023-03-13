@@ -542,6 +542,73 @@ fn main() {
 
 上面例子:` Rc::clone`为`Rc<T>`实例的strong_count加1, `Rc<T>`的实例只有在strong_count为0的时候才会被清理
 
+```rs
+use crate::List::{Cons, Nil};
+use std::{
+    cell::RefCell,
+    rc::{Rc, Weak},
+};
+
+#[derive(Debug)]
+enum List {
+    Cons(i32, RefCell<Weak<List>>),
+    Nil,
+}
+
+impl List {
+    fn tail(&self) -> Option<Rc<List>> {
+        match self {
+            Cons(_, item) => item.borrow().upgrade(),
+            Nil => None,
+        }
+    }
+}
+
+fn main() {
+    let a = Rc::new(Cons(5, RefCell::new(Weak::new())));
+    println!(
+        "strong count={}, weak count={}, next item={:?}",
+        Rc::strong_count(&a),
+        Rc::weak_count(&a),
+        a.tail()
+    ); // strong count=1, weak count=0, next item=None
+
+    // downgrade: Rc<List> -> Weak<List>
+    let b = Rc::new(Cons(10, RefCell::new(Rc::downgrade(&a))));
+    println!(
+        "strong count={}, weak count={}, next item={:?}",
+        Rc::strong_count(&a),
+        Rc::weak_count(&a),
+        a.tail()
+    ); // strong count=1, weak count=1, next item=None
+    println!(
+        "strong count={}, weak count={}, next item={:?}",
+        Rc::strong_count(&b),
+        Rc::weak_count(&b),
+        b.tail()
+    ); //  strong count=1, weak count=0, next item=Some(Cons(5, RefCell { value: (Weak) }))
+
+    // *a is Cons(i32, RefCell<Weak<List>>)
+    // &*a is Cons(i32, &RefCell<Weak<List>>)
+    if let Cons(_, item) = &*a {
+        *item.borrow_mut() = Rc::downgrade(&b);
+    }
+
+    println!(
+        "strong count={}, weak count={}, next item={:?}",
+        Rc::strong_count(&a),
+        Rc::weak_count(&a),
+        a.tail()
+    ); // strong count=1, weak count=1, next item=Some(Cons(10, RefCell { value: (Weak) }))
+    println!(
+        "strong count={}, weak count={}, next item={:?}",
+        Rc::strong_count(&b),
+        Rc::weak_count(&b),
+        b.tail()
+    ); //  strong count=1, weak count=1, next item=Some(Cons(5, RefCell { value: (Weak) }))
+}
+```
+
 ### `Weak<T>`
 
 `Rc<T>`实例通过调用`Rc::downgrade`方法可以创建值的Weak Reference(弱引用)
