@@ -9,6 +9,7 @@
   - [`RefCell<T>` and Interior mutability](#refcellt-and-interior-mutability)
     - [`Rc<T>` with `RefCell<T>`](#rct-with-refcellt)
   - [Memory Leak](#memory-leak)
+    - [`Weak<T>`](#weakt)
 
 ## introduction
 
@@ -539,3 +540,71 @@ fn main() {
 }
 ```
 
+上面例子:` Rc::clone`为`Rc<T>`实例的strong_count加1, `Rc<T>`的实例只有在strong_count为0的时候才会被清理
+
+### `Weak<T>`
+
+`Rc<T>`实例通过调用`Rc::downgrade`方法可以创建值的Weak Reference(弱引用)
+- 返回类型是`Weak<T>`，为智能指针
+- 调用`Rc::downgrade`会为weak_count加1
+- weak_count不为0， 不影响`Rc<T>`实例的清理，可以避免循环引用
+
+```rs
+use std::{
+    borrow::Borrow,
+    cell::RefCell,
+    rc::{Rc, Weak},
+};
+
+#[derive(Debug)]
+struct Node {
+    // tree
+    value: i32,
+    parent: RefCell<Weak<Node>>,
+    children: RefCell<Vec<Rc<Node>>>,
+}
+
+fn main() {
+    let leaf = Rc::new(Node {
+        value: 3,
+        parent: RefCell::new(Weak::new()),
+        children: RefCell::new(vec![]),
+    });
+
+    // upgrade, Weak<T> -> Rc<T>
+    println!("parent={:?}", leaf.parent.borrow().upgrade()); // parent=None
+    println!(
+        "leaf strong count={}, weak count={}",
+        Rc::strong_count(&leaf),
+        Rc::weak_count(&leaf)
+    );
+
+    {
+        let branch = Rc::new(Node {
+            value: 5,
+            parent: RefCell::new(Weak::new()),
+            children: RefCell::new(vec![Rc::clone(&leaf)]),
+        });
+
+        // downgrade: Rc<T> -> Weak<T>
+        *leaf.parent.borrow_mut() = Rc::downgrade(&branch);
+        println!(
+            "branch strong count={}, weak count={}",
+            Rc::strong_count(&branch),
+            Rc::weak_count(&branch)
+        ); // branch strong count=1, weak count=1;
+        println!(
+            "leaf strong count={}, weak count={}",
+            Rc::strong_count(&leaf),
+            Rc::weak_count(&leaf)
+        );
+    } // 对于branch,走出作用域，强引用-1，虽然弱引用为1，不妨碍丢弃branch
+
+    println!("parent={:?}", leaf.parent.borrow().upgrade()); // parent=None
+    println!(
+        "leaf strong count={}, weak count={}",
+        Rc::strong_count(&leaf),
+        Rc::weak_count(&leaf)
+    );
+}
+```
