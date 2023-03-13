@@ -4,6 +4,7 @@
   - [Thread](#thread)
   - [Message Passing](#message-passing)
   - [Shared-State Concurrency](#shared-state-concurrency)
+  - [`Send`, `Sync` trait](#send-sync-trait)
 
 ## Thread
 
@@ -264,3 +265,15 @@ fn main() {
 `Mutex<T>`提供了内部可变性，和`Cell`家族一样
 - 使用`RefCell<T>`改变`Rc<T>`里面的内容，有循环引用风险
 - 使用`Mutex<T>`改变`Arc<T>`里面的内容，有死锁风险，
+
+## `Send`, `Sync` trait
+
+Rust语言本身涉及并发性较少，其并发特性来自标准库
+
+实现`Send trait`的类型可以在线程间转移所有权，Rust几乎所有类型都实现了`Send`
+> 但是`Rc<T>`没有实现`Send`，只用于单线程场景
+
+实现`Sync trait`的类型可以安全地被多个线程引用，Rust基础类型都实现了`Send`
+> 如果`T`是`Sync`，那么`&T`就是`Send`  
+> 但是`Rc<T>`, `RefCell<T>`, `Cell<T>`没有实现`Sync`，只用于单线程场景  
+> `Mutex<T>`实现`Sync`，可用于多线程场景  
