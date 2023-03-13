@@ -541,6 +541,7 @@ fn main() {
 ```
 
 上面例子:` Rc::clone`为`Rc<T>`实例的strong_count加1, `Rc<T>`的实例只有在strong_count为0的时候才会被清理
+> 因为strong_count=2，所以出现死循环
 
 ```rs
 use crate::List::{Cons, Nil};
