@@ -106,3 +106,94 @@ fn main() {
 }
 ```
 
+example
+
+```rs
+// lib.rs
+pub trait Draw{
+    fn draw(&self);
+}
+
+pub struct Screen{
+    // Vec要存各种实现了Draw trait的struct，所以使用Box<dyn Draw>>
+    // 泛型只能放一种类型比如Button
+    pub components: Vec<Box<dyn Draw>>,
+}
+
+impl Screen {
+    pub fn run(&self){
+        for component in self.components.iter(){
+            // run不关心具体，只要实现了draw方法就行
+            component.draw();
+        }
+    }
+}
+
+pub struct Button{
+    pub width:u32,
+    pub height:u32,
+    pub label: String
+}
+
+impl Draw for Button{
+    fn draw(&self){
+        println!("drawn a button");
+    }
+}
+
+pub struct SelectBox{
+    pub width:u32,
+    pub height:u32,
+    pub options: Vec<String>,
+}
+
+impl Draw for SelectBox{
+    fn draw(&self){
+        println!("drawn a select box");
+    }
+}
+
+// // ---对比泛型实现-----------
+// pub struct Screen<T:Draw>{
+//     pub components: Vec<T>,
+// }
+
+// impl<T> Screen<T>
+// where T: Draw
+// {
+//     pub fn run(&self){
+//         for component in self.components.iter(){
+//             component.draw();
+//         }
+//     }
+// }
+// // ------------------
+```
+
+```rs
+// main.rs
+use project1::{Button, SelectBox, Screen};
+
+fn main() {
+    let screen=Screen{
+        components:vec![
+            Box::new(SelectBox{
+                width:75,
+                height:10,
+                options: vec![
+                    String::from("Yes"),
+                    String::from("No"),
+                    String::from("Cancel"),
+                ]
+            }),
+            Box::new(Button{
+                width:50,
+                height: 10,
+                label: String::from("OK"),
+            }),
+        ]
+    };
+
+    screen.run();
+}
+```
