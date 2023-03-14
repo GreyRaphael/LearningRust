@@ -6,12 +6,11 @@
 
 ## oop features
 
-OOP三大特征
+OOP特征
 - 封装: public, private
 - 继承: 使对象可以沿用另外一个对象的数据和行为。目前很多语言不使用继承作为程序内置的程序设计方案
   - 目的1： 代码复用。Rust没有继承，用trait方法来代码复用
   - 目的2： 实现多态(Polymorphism)。Rust使用泛型和tait bound实现多态
-
 
 ```rs
 // lib.rs
@@ -54,19 +53,6 @@ impl AveragedCollection {
 
 [What is dyn](https://doc.rust-lang.org/rust-by-example/trait/dyn.html)
 
-将trait约束作用于泛型时，Rust编译器会执行单态化
-- 编译器会为泛型参数的每一个具体类型生成对应的函数和方法
-- 通过单态化生成的代码会执行静态派发(**static dispatch**)，在编译过程中确定调用的具体方法
-
-动态派发(**dynamic dispatch**)
-- 无法在编译阶段确定调用的是哪一种方法
-- 编译器会产生额外的代码以便在运行时找到希望调用的方法
-- 使用trait对象会执行动态派发，产生运行时开销，阻止编译器内联方法代码，使得部分优化操作无法进行
-
-只有满足object-safe的trait才能转化为trait对象，判断规则
-- 方法不返回`Self`
-- 方法中不包含任何泛型类型参数
-
 ```rs
 struct Sheep {}
 struct Cow {}
@@ -106,7 +92,14 @@ fn main() {
 }
 ```
 
-example
+将trait约束作用于泛型时，Rust编译器会执行单态化
+- 编译器会为泛型参数的每一个具体类型生成对应的函数和方法
+- 通过单态化生成的代码会执行静态派发(**static dispatch**)，在编译过程中确定调用的具体方法
+
+动态派发(**dynamic dispatch**)
+- 无法在编译阶段确定调用的是哪一种方法
+- 编译器会产生额外的代码以便在运行时找到希望调用的方法
+- 使用trait对象会执行动态派发，产生运行时开销，阻止编译器内联方法代码，使得部分优化操作无法进行
 
 ```rs
 // lib.rs
@@ -117,6 +110,7 @@ pub trait Draw{
 pub struct Screen{
     // Vec要存各种实现了Draw trait的struct，所以使用Box<dyn Draw>>
     // 泛型只能放一种类型比如Button
+    // Draw就是trait对象
     pub components: Vec<Box<dyn Draw>>,
 }
 
@@ -195,5 +189,21 @@ fn main() {
     };
 
     screen.run();
+}
+```
+
+只有满足object-safe的trait才能转化为trait对象，判断规则
+- 方法不返回`Self`
+- 方法中不包含任何泛型类型参数
+
+example: Clone trait因为返回值是`Self`, 所以无法转化为trait对象
+
+```rs
+pub trait Clone{
+    fn clone(&self)->Self;
+}
+
+pub struct Screen{
+    // pub components: Vec<Box<dyn Clone>>, // error
 }
 ```
