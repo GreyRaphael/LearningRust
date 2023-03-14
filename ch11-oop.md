@@ -3,6 +3,7 @@
 - [Object-Oriented Programming Features of Rust](#object-oriented-programming-features-of-rust)
   - [oop features](#oop-features)
   - [`dyn`](#dyn)
+  - [implementing an OOP Pattern - state pattern](#implementing-an-oop-pattern---state-pattern)
 
 ## oop features
 
@@ -205,5 +206,126 @@ pub trait Clone{
 
 pub struct Screen{
     // pub components: Vec<Box<dyn Clone>>, // error
+}
+```
+
+## implementing an OOP Pattern - state pattern
+
+状态模式(state pattern)是一种面向对象的设计模式
+- 一个值的内部状态由多个**状态对象**(state object)表达而成, 而值的行为随着内部状态的改变而改变
+
+状态模式特点
+- 业务需求变化时，不需要修改该值对应的代码，或者使用该值的代码
+- 只需要更新state object内部的代码，以便改变其规则，或者增加一些新的状态
+
+状态模式缺点:
+- 某些状态是相互耦合的，新增一个状态，相关联的状态需要修改
+- 重复实现一些代码逻辑
+
+example: post经历`Draft`, `PendingReview`, `Published`三个状态
+
+```rs
+// lib.rs
+pub struct Post{
+    state: Option<Box<dyn State>>,
+    content: String,
+}
+
+// 三个状态: Draft, PendingReview, Published
+
+trait State{
+    // Box<Self>: 参数只能是包裹当前类型(Self)的Box类型
+    fn request_review(self: Box<Self>) ->Box<dyn State>;
+    fn approve(self: Box<Self>)->Box<dyn State>;
+    fn content<'a>(&self, _post:&'a Post)->&'a str;
+}
+
+impl Post{
+    pub fn new()->Post{
+        Post{
+            state: Some(Box::new(Draft{})),
+            content: String::new(),
+        }
+    }
+
+    pub fn add_text(&mut self, text:&str){
+        self.content.push_str(text);
+    }
+
+    pub fn content(&self)->&str{
+        // as_ref: Converts from &Option<T> to Option<&T>.
+        self.state.as_ref().unwrap().content(&self)
+    }
+
+    pub fn request_review(&mut self){
+        // take(): Takes the value out of the option, leaving a None in its place.
+        if let Some(s)=self.state.take(){
+            self.state=Some(s.request_review())
+        }
+    }
+
+    pub fn approve(&mut self){
+        if let Some(s)=self.state.take(){
+            self.state=Some(s.approve())
+        }
+    }
+}
+
+struct Draft{}
+
+impl State for Draft{
+    fn request_review(self: Box<Self>) ->Box<dyn State>{
+        Box::new(PendingReview{})
+    }
+    fn approve(self: Box<Self>)->Box<dyn State>{
+        self
+    }
+    fn content<'a>(&self, _post:&'a Post)->&'a str{
+        "draf is saving!"
+    }
+}
+
+struct PendingReview{}
+
+impl State for PendingReview{
+    fn request_review(self: Box<Self>) ->Box<dyn State>{
+        self
+    }
+    fn approve(self: Box<Self>)->Box<dyn State>{
+        Box::new(Published{})
+    }
+    fn content<'a>(&self, _post:&'a Post)->&'a str{
+        "draf is under review!"
+    }
+}
+
+struct Published{}
+
+impl State for Published{
+    fn request_review(self: Box<Self>) ->Box<dyn State>{
+        self
+    }
+    fn approve(self: Box<Self>)->Box<dyn State>{
+        self
+    }
+    fn content<'a>(&self, post:&'a Post)->&'a str{
+        &post.content
+    }
+}
+```
+
+```rs
+// main.rs
+use project1::Post;
+
+fn main() {
+    let mut post=Post::new();
+
+    post.add_text("this is content");
+    println!("content={}", post.content()); // content=draf is saving!
+    post.request_review();
+    println!("content={}", post.content()); // content=draf is under review!
+    post.approve();
+    println!("content={}", post.content()); // content=this is content
 }
 ```
