@@ -8,6 +8,7 @@
   - [`let`](#let)
   - [function arguments](#function-arguments)
   - [match pattern grammar](#match-pattern-grammar)
+    - [specifier `_`](#specifier-_)
 
 模式匹配类型
 - 可失败的: `match`, `if let`, `while let`
@@ -263,3 +264,51 @@ fn main(){
 }
 ```
 
+### specifier `_`
+
+```rs
+// _忽略函数参数
+fn foo(_: i32, y:i32){
+    println!("y={}", y);
+}
+
+fn main(){
+    foo(3, 4);
+
+    let mut v1=Some(5);
+    let v2=Some(10);
+    match (v1, v2){
+        // _忽略值的一部分
+        (Some(_), Some(_))=>println!("two value is Some"),
+        _=>println!("two value eithor is Some"),
+    }
+
+    let numbers=(1, 2, 3, 4);
+    match numbers {
+        // _忽略值的一部分
+        (first, _, third, _)=>println!("{}, {}", first, third),
+        _=>(),
+    }
+
+    // _忽略未被使用的变量
+    let _post=10;
+
+    let v3=Some(1000);
+    if let Some(_v)=v3{
+        println!("found a value");
+    }
+    println!("{:?}", v3); // Some(1000)
+
+    let v4=Some(String::from("hello"));
+    if let Some(_v)=v4{
+        println!("found a value");
+    }
+    // println!("{:?}", v4); // error, v4被_v借用了, 丧失所有权
+
+    let v5=Some(String::from("hello"));
+    if let Some(_)=v5{
+        println!("found a value");
+    }
+    println!("{:?}", v5); // ok, v5未被_借用
+}
+```
