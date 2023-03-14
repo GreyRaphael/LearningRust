@@ -7,6 +7,7 @@
   - [`for`](#for)
   - [`let`](#let)
   - [function arguments](#function-arguments)
+  - [match pattern grammar](#match-pattern-grammar)
 
 模式匹配类型
 - 可失败的: `match`, `if let`, `while let`
@@ -107,6 +108,158 @@ fn foo(x:i32){
 
 fn print_coordinates(&(x, y) :&(i32, i32)){
     println!("coor=({},{})", x, y);
+}
+```
+
+## match pattern grammar
+
+匹配字面值
+
+```rs
+fn main(){
+    let x=1;
+    match x{
+        1=>println!("one"),
+        2=>println!("two"),
+        3=>println!("three"),
+        _=>println!("anything"),
+    }
+}
+```
+
+匹配变量，比如下面的`Some(y)`, y是新变量和前面的y不同
+
+```rs
+fn main(){
+    let x=Some(6);
+    let y=10;
+    match x{
+        Some(50)=>println!("got 50"),
+        Some(y)=>println!("got {:?}", y),
+        _=>println!("default {:?}", x),
+    }
+    println!("x={:?}, y={:?}", x, y); // x=Some(6), y=10
+}
+```
+
+多重匹配模式: `|`
+
+```rs
+fn main(){
+    let x=1;
+    match x{
+        1|2=>println!("one or two"),
+        3=>println!("three"),
+        _=>println!("anything"),
+    }
+}
+```
+
+匹配一个范围: `..`
+
+```rs
+fn main(){
+    let x=1;
+    match x{
+        1..=5=>println!("one,two,three,four or five"),
+        6=>println!("six"),
+        _=>println!("anything"),
+    }
+
+    let x='c';
+    match x {
+        'a'..='z'=>println!("lower case"),
+        'A'..='Z'=>println!("upper case"),
+        _=>println!("other symbols"),
+    }
+}
+```
+
+解构struct, enum, tuple, 从而引用这些类型值的部分数据
+
+```rs
+struct Point{
+    x:i32,
+    y:i32,
+}
+
+fn main(){
+    let p1=Point{x:10, y:20};
+    let Point{x: a, y:b}=p1;
+    println!("a={}, b={}", a, b);
+
+    // 简写
+    let Point{x, y}=p1;
+    println!("x={}, y={}", x, y);
+
+    match p1 {
+        Point{x, y:0}=>println!("on the x axis, x={}", x),
+        Point{x:0, y}=>println!("on the y axis, y={}", y),
+        Point{x, y}=>println!("x={}, y={}", x, y),
+    }
+}
+```
+
+```rs
+enum Message {
+    Quit,
+    Move{x:i32, y:i32},
+    Write(String),
+    Color(u8, u8, u8),
+}
+
+fn main(){
+    let msg=Message::Color(0, 1, 255);
+    match msg{
+        Message::Quit=>println!("quit"),
+        Message::Move{x, y}=>println!("x={}, y={}", x, y),
+        Message::Write(txt)=>println!("txt={}", txt),
+        Message::Color(r, g, b)=>{
+            println!("red={}, green={}, blue={}", r, g, b);
+        }
+    }
+}
+```
+
+解构嵌套enum
+
+```rs
+enum ColorStyle{
+    RGB(u8, u8, u8),
+    HSV(u8, u8, u8),
+}
+
+enum Message {
+    Quit,
+    Move{x:i32, y:i32},
+    Write(String),
+    Color(ColorStyle),
+}
+
+fn main(){
+    let msg=Message::Color(ColorStyle::RGB(0, 1, 255));
+    match msg{
+        Message::Color(ColorStyle::RGB(r, g, b))=>{
+            println!("red={}, green={}, blue={}", r, g, b);
+        },
+        Message::Color(ColorStyle::HSV(h, s, v))=>{
+            println!("hue={}, saturation={}, value={}", h, s, v);
+        },
+        _=>(),
+    }
+}
+```
+
+解构tuple
+
+```rs
+struct Point{
+    x:i32,
+    y:i32,
+}
+
+fn main(){
+    let ((a, b), Point{x, y})=((10, 20), Point{x:2, y:20});
 }
 ```
 
