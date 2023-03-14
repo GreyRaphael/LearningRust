@@ -11,6 +11,7 @@
     - [specifier `_`](#specifier-_)
     - [specifier `..`](#specifier-)
     - [match guard](#match-guard)
+    - [`@` binding](#-binding)
 
 模式匹配类型
 - 可失败的: `match`, `if let`, `while let`
@@ -368,3 +369,20 @@ fn main(){
 }
 ```
 
+### `@` binding
+
+```rs
+enum Message{
+    Hello{id:i32},
+}
+
+fn main(){
+    let msg=Message::Hello{id:10};
+    match msg {
+        // @限制id的范围，并将数值交给value
+        Message::Hello{id:value @3..=7} =>println!("found in range [3,7]: {}", value),
+        Message::Hello{id:value @10..=12} =>println!("found in range [10,12]: {}", value),
+        Message::Hello{id} =>println!("found other id: {}", id),
+    }
+}
+```
