@@ -4,6 +4,7 @@
   - [Unsafe Rust](#unsafe-rust)
     - [raw pointer](#raw-pointer)
     - [unsafe function](#unsafe-function)
+  - [`extern`](#extern)
 
 ## Unsafe Rust
 
@@ -90,4 +91,35 @@ fn main(){
         // slice::from_raw_parts_mut(raw_ptr, 10); // error
     };
 }
+```
+
+## `extern`
+
+作用：简化创建和使用外部函数接口(FFI, Foreign Function Interface)的过程
+> 允许一种编程语言定义函数，并让其他编程语言调用这些函数  
+> `extern`声明的函数都是`unsafe`
+
+调用其他语言提供的函数
+
+```rs
+extern "C" { // 遵循C语言的ABI
+    fn abs(input :i32)->i32;
+}
+
+fn main() {
+    unsafe{
+        println!("abs = {}", abs(-3));
+    }
+}
+```
+
+暴露rust函数给其他语言使用
+
+```rs
+#[no_mangle] // 不允许编译器改函数的名字
+pub extern "C" fn call_from_c(){
+    println!("Just call a function from C!");
+}
+
+fn main(){}
 ```
