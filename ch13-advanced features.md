@@ -5,6 +5,7 @@
     - [raw pointer](#raw-pointer)
     - [unsafe function](#unsafe-function)
   - [`extern`](#extern)
+  - [global variable, `static`](#global-variable-static)
 
 ## Unsafe Rust
 
@@ -123,3 +124,30 @@ pub extern "C" fn call_from_c(){
 
 fn main(){}
 ```
+
+## global variable, `static`
+
+Rust支持全局变量，但因为所有权机制可能产生数据竞争问题
+
+```rs
+// 生命周期默认都是'static, 无需显式标注
+static G_NUM: &str="Biden";
+static mut COUNTER: u32=0;
+
+fn add_to_count(inc:u32){
+    unsafe{
+        COUNTER+=inc;
+    }
+}
+
+fn main(){
+    println!("name is: {}", G_NUM);
+
+    add_to_count(3);
+    unsafe{
+        // 并行或者并发的时候不要使用静态变量
+        println!("{}", COUNTER); // 3
+    }
+}
+```
+
