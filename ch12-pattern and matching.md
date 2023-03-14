@@ -9,6 +9,7 @@
   - [function arguments](#function-arguments)
   - [match pattern grammar](#match-pattern-grammar)
     - [specifier `_`](#specifier-_)
+    - [specifier `..`](#specifier-)
 
 模式匹配类型
 - 可失败的: `match`, `if let`, `while let`
@@ -312,3 +313,27 @@ fn main(){
     println!("{:?}", v5); // ok, v5未被_借用
 }
 ```
+
+### specifier `..`
+
+```rs
+struct Point{
+    x:i32,
+    y:i32,
+    z:i32,
+}
+
+fn main(){
+    let origin=Point{x:0,y:0,z:0};
+    match origin {
+        // .. 忽略剩余的y,z
+        Point{x,..} => println!("x={}", x),
+    }
+
+    let numbers=(1, 2, 3, 4, 5);
+    match numbers {
+        (first, .., last) =>println!("first={},  last={}",first, last),
+    }
+}
+```
+
