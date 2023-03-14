@@ -10,6 +10,7 @@
   - [match pattern grammar](#match-pattern-grammar)
     - [specifier `_`](#specifier-_)
     - [specifier `..`](#specifier-)
+    - [match guard](#match-guard)
 
 模式匹配类型
 - 可失败的: `match`, `if let`, `while let`
@@ -333,6 +334,36 @@ fn main(){
     let numbers=(1, 2, 3, 4, 5);
     match numbers {
         (first, .., last) =>println!("first={},  last={}",first, last),
+    }
+}
+```
+
+### match guard
+
+在match基础上提供额外的判断
+
+```rs
+fn main(){
+    let num=Some(4);
+    match num {
+        Some(x) if x<5 =>println!("less than five: {}", x),
+        Some(x) =>println!("x={}", x),
+        None=>(),
+    }
+
+    let y=10;
+    match num {
+        Some(50)=>println!("got 50"),
+        Some(n) if n==y => println!("n={:?}", n),
+        _=>println!("default={:?}", num)
+    }
+    println!("num={:?}, y={:?}", num, y); // num=Some(4), y=10
+
+    let a=4;
+    let b=false;
+    match a{
+        4|5|6 if b => println!("yes"),
+        _=>println!("no"),
     }
 }
 ```
