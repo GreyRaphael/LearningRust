@@ -329,3 +329,66 @@ fn main() {
     println!("content={}", post.content()); // content=this is content
 }
 ```
+
+example：修改上面的例子，将状态和行为编码为类型
+- Rust类型检查，会阻止用户使用无效的状态
+
+```rs
+// lib.rs
+pub struct Post{
+    content:String,
+}
+
+pub struct DraftPost{
+    content:String,
+}
+
+pub struct PendingReviewPost{
+    content: String,
+}
+
+impl Post{
+    pub fn new()->DraftPost{
+        DraftPost{
+            content:String::new(),
+        }
+    }
+
+    pub fn content(&self)->&str{
+        &self.content
+    }
+}
+
+impl DraftPost{
+    pub fn add_text(&mut self, text:&str){
+        self.content.push_str(text);  
+    }
+    pub fn request_review(self)->PendingReviewPost{
+        PendingReviewPost{
+            content: self.content,
+        }
+    }
+}
+
+impl PendingReviewPost{
+    pub fn approve(self)->Post{
+        Post{
+            content: self.content,
+        }
+    }
+}
+```
+
+```rs
+// main.rs
+use project1::Post;
+
+fn main() {
+    let mut draft=Post::new();
+
+    draft.add_text("this is content");
+    let reviewed=draft.request_review();
+    let post=reviewed.approve();
+    println!("content={}", post.content()); // content=this is content
+}
+```
