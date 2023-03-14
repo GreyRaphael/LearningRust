@@ -4,8 +4,9 @@
   - [Unsafe Rust](#unsafe-rust)
     - [raw pointer](#raw-pointer)
     - [unsafe function](#unsafe-function)
-  - [`extern`](#extern)
-  - [global variable, `static`](#global-variable-static)
+    - [`extern`](#extern)
+    - [global variable, `static`](#global-variable-static)
+    - [unsafe trait](#unsafe-trait)
 
 ## Unsafe Rust
 
@@ -94,7 +95,7 @@ fn main(){
 }
 ```
 
-## `extern`
+### `extern`
 
 作用：简化创建和使用外部函数接口(FFI, Foreign Function Interface)的过程
 > 允许一种编程语言定义函数，并让其他编程语言调用这些函数  
@@ -125,7 +126,7 @@ pub extern "C" fn call_from_c(){
 fn main(){}
 ```
 
-## global variable, `static`
+### global variable, `static`
 
 Rust支持全局变量，但因为所有权机制可能产生数据竞争问题
 
@@ -151,3 +152,16 @@ fn main(){
 }
 ```
 
+### unsafe trait
+
+```rs
+unsafe trait Foo{
+
+}
+
+unsafe impl Foo for i32{
+
+}
+
+fn main(){}
+```
