@@ -15,6 +15,7 @@
     - [Implement External Traits on External Types](#implement-external-traits-on-external-types)
   - [Advanced Types](#advanced-types)
     - [Type Aliases](#type-aliases)
+    - [Never Type `!`](#never-type-)
 
 ## Unsafe Rust
 
@@ -462,3 +463,16 @@ fn main() {
     f2();
 }
 ```
+
+### Never Type `!`
+
+NeverType形式如下，绝对不会返回值，比如
+- `continue`
+- `panic`
+
+```rs
+fn bar() -> ! {
+    // 报错，因为不写，返回值是()
+}
+```
+
