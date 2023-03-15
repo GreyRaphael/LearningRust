@@ -13,6 +13,8 @@
     - [Calling Methods with the Same Name](#calling-methods-with-the-same-name)
     - [super trait](#super-trait)
     - [Implement External Traits on External Types](#implement-external-traits-on-external-types)
+  - [Advanced Types](#advanced-types)
+    - [Type Aliases](#type-aliases)
 
 ## Unsafe Rust
 
@@ -418,5 +420,45 @@ impl fmt::Display for Wrapper {
 fn main() {
     let w = Wrapper(vec![String::from("hello"), String::from("world")]);
     println!("w = {}", w);
+}
+```
+
+## Advanced Types
+
+### Type Aliases
+
+```rs
+type Kilometers = i32;
+
+fn main() {
+    let x: i32 = 5;
+    let y: Kilometers = 5;
+
+    println!("x + y = {}", x + y);
+}
+```
+
+example: 优化教长的类型
+
+```rs
+// 泛型参数是函数F()，输入值为空，返回值为空
+// Send用于异步
+// 'static用于静态生命周期
+type Thunk = Box<dyn Fn() + Send + 'static>;
+
+fn takes_long_type(f: Thunk) {
+    f();
+}
+
+fn returns_long_type() -> Thunk {
+    Box::new(|| println!("hi"))
+}
+
+fn main() {
+    let f1: Thunk = Box::new(|| println!("hello"));
+    takes_long_type(f1);
+
+    let f2 = returns_long_type();
+    f2();
 }
 ```
