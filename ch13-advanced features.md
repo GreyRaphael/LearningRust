@@ -7,6 +7,8 @@
     - [`extern`](#extern)
     - [global variable, `static`](#global-variable-static)
     - [unsafe trait](#unsafe-trait)
+  - [Advanced Trait](#advanced-trait)
+    - [Associated Types](#associated-types)
 
 ## Unsafe Rust
 
@@ -165,3 +167,48 @@ unsafe impl Foo for i32{
 
 fn main(){}
 ```
+
+## Advanced Trait
+
+### Associated Types
+
+关联类型(Associated Types) vs 泛型
+- 关联类型实现需要`type Item=u32`，而且只能针对`Conter`实现一种类型的trait(u32)
+- 泛型实现需要标注`<u32>, <Strng>`，能够针对`Conter`实现多种种类型的trait(u32, String)
+
+```rs
+pub trait Iterator {
+    type Item; // Item is Associated Types
+
+    fn next(&mut self) -> Option<Self::Item>;
+}
+
+pub trait Iterator2<T> {
+    // 泛型
+    fn next(&mut self) -> Option<T>;
+}
+
+struct Counter {}
+
+impl Iterator for Counter {
+    type Item = u32; // 实现的过程需要标注 u32, 而且只能实现一次
+    fn next(&mut self) -> Option<Self::Item> {
+        None
+    }
+}
+
+impl Iterator2<String> for Counter {
+    fn next(&mut self) -> Option<String> {
+        None
+    }
+}
+
+impl Iterator2<u32> for Counter {
+    fn next(&mut self) -> Option<u32> {
+        None
+    }
+}
+
+fn main() {}
+```
+
