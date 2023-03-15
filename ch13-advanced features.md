@@ -16,6 +16,7 @@
   - [Advanced Types](#advanced-types)
     - [Type Aliases](#type-aliases)
     - [Never Type `!`](#never-type-)
+    - [Dynamically Sized Types(DST)](#dynamically-sized-typesdst)
 
 ## Unsafe Rust
 
@@ -475,4 +476,23 @@ fn bar() -> ! {
     // 报错，因为不写，返回值是()
 }
 ```
+
+### Dynamically Sized Types(DST)
+
+只能在运行时才能确定大小的类型, 比如`str`(`&str`不是)
+
+```rs
+// error example
+let s1: str = "Hello there!";
+let s2: str = "How's it going?";
+
+// 使用&str切片来解决：因为&str存：str地址, str长度
+
+// correct example
+let s3: &str = "Hello there!";
+let s4: &str = "How's it going?";
+```
+
+每个trait都是一个动态大小的类型
+> 使用trait对象，必须将其放在某种指针之后: `&dyn Trait`, `Box<dyn Trait>`, `Rc<dyn Trait>`
 
