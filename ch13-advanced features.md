@@ -10,6 +10,7 @@
   - [Advanced Trait](#advanced-trait)
     - [Associated Types](#associated-types)
     - [Operator overloading](#operator-overloading)
+    - [Calling Methods with the Same Name](#calling-methods-with-the-same-name)
 
 ## Unsafe Rust
 
@@ -281,5 +282,75 @@ fn main() {
     println!("{:?}", p1); // Millimeters(1000)
     println!("{:?}", p2); // Meters(1)
     println!("{:?}", p1 + p2); // Millimeters(2000)
+}
+```
+
+### Calling Methods with the Same Name
+
+example: 多个trait有同名method, 并且有`&self`参数的情形
+
+```rs
+trait Pilot {
+    fn fly(&self);
+}
+
+trait Wizard {
+    fn fly(&self);
+}
+
+struct Human;
+
+impl Pilot for Human {
+    fn fly(&self) {
+        println!("This is your captain speaking.");
+    }
+}
+
+impl Wizard for Human {
+    fn fly(&self) {
+        println!("Up!");
+    }
+}
+
+impl Human {
+    fn fly(&self) {
+        println!("*waving arms furiously*");
+    }
+}
+
+fn main() {
+    let person = Human;
+    person.fly(); // 调用自己的方法
+    // 调用实现的trait的方法
+    Pilot::fly(&person);
+    Wizard::fly(&person);
+}
+```
+
+example: 多个trait有同名method, 并且无参数的情形, 使用**Fully Qualified Syntax**
+
+```rs
+trait Animal {
+    fn baby_name() -> String;
+}
+
+struct Dog;
+
+impl Dog {
+    fn baby_name() -> String {
+        String::from("Spot")
+    }
+}
+
+impl Animal for Dog {
+    fn baby_name() -> String {
+        String::from("puppy")
+    }
+}
+
+fn main() {
+    println!("{}", Dog::baby_name()); // Spot
+    // println!("{}", Animal::baby_name()); // error
+    println!("{}", <Dog as Animal>::baby_name()); // puppy
 }
 ```
