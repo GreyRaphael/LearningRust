@@ -9,6 +9,7 @@
     - [unsafe trait](#unsafe-trait)
   - [Advanced Trait](#advanced-trait)
     - [Associated Types](#associated-types)
+    - [Operator overloading](#operator-overloading)
 
 ## Unsafe Rust
 
@@ -212,3 +213,73 @@ impl Iterator2<u32> for Counter {
 fn main() {}
 ```
 
+### Operator overloading
+
+只能实现`std::ops`里面的运算符重载
+
+```rs
+use std::ops::Add;
+
+#[derive(Debug)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl Add for Point {
+    type Output = Point;
+
+    fn add(self, other: Point) -> Point {
+        Point {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 1, y: 0 };
+    let p2 = Point { x: 2, y: 3 };
+    println!("{:?}", p1);
+    println!("{:?}", p2);
+    println!("{:?}", p1 + p2); // Point { x: 3, y: 3 }
+}
+```
+
+其中`std::ops::Add` trait里面泛型指定了默认类型`<Rhs=Self>`
+
+```rs
+trait Add<Rhs=Self> {
+    type Output;
+
+    fn add(self, rhs: Rhs) -> Self::Output;
+}
+```
+
+example: 两种不同类型相加
+
+```rs
+use std::ops::Add;
+
+#[derive(Debug)]
+struct Millimeters(u32);
+
+#[derive(Debug)]
+struct Meters(u32);
+
+impl Add<Meters> for Millimeters {
+    type Output = Millimeters;
+
+    fn add(self, other: Meters) -> Millimeters {
+        Millimeters(self.0 + (other.0 * 1000))
+    }
+}
+
+fn main() {
+    let p1 = Millimeters(1000);
+    let p2 = Meters(1);
+    println!("{:?}", p1); // Millimeters(1000)
+    println!("{:?}", p2); // Meters(1)
+    println!("{:?}", p1 + p2); // Millimeters(2000)
+}
+```
