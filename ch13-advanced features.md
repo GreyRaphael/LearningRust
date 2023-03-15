@@ -17,6 +17,9 @@
     - [Type Aliases](#type-aliases)
     - [Never Type `!`](#never-type-)
     - [Dynamically Sized Types(DST)](#dynamically-sized-typesdst)
+  - [Advanced Functions and Closures](#advanced-functions-and-closures)
+    - [Function Pointers](#function-pointers)
+    - [Returning Closures](#returning-closures)
 
 ## Unsafe Rust
 
@@ -496,3 +499,73 @@ let s4: &str = "How's it going?";
 每个trait都是一个动态大小的类型
 > 使用trait对象，必须将其放在某种指针之后: `&dyn Trait`, `Box<dyn Trait>`, `Rc<dyn Trait>`
 
+## Advanced Functions and Closures
+
+### Function Pointers
+
+函数指针
+- 将函数作为参数传递给其他函数
+- 被传递的函数转化成`fn`类型(functin pointer)
+- `fn`是一个类型，不是一个`trait`, 可以直接指定fn为参数类型，不用声明一个以`Fn trait`为约束的泛型参数
+- 并且`fn`实现了`Fn`, `FnMut`, `FnOnce`三种trait，所以只要是能够接受**闭包**的函数，都能接受**函数指针**
+
+```rs
+fn add_one(x: i32) -> i32 {
+    x + 1
+}
+
+fn do_twice(f: fn(i32) -> i32, arg: i32) -> i32 {
+    f(arg) + f(arg)
+}
+
+fn main() {
+    let a = do_twice(add_one, 10);
+    println!("{}", a); // 22
+}
+```
+
+example: `map`接受的参数必须是实现了`FnMut` trait
+
+```rs
+fn main() {
+    let numbers = vec![1, 2, 3, 4];
+    let strings: Vec<String> = numbers.iter().map(|i| i.to_string()).collect();
+    println!("{:?}", strings); // ["1", "2", "3", "4"]
+
+    let another_strings: Vec<String> = numbers.iter().map(ToString::to_string).collect();
+    println!("{:?}", another_strings); // ["1", "2", "3", "4"]
+}
+```
+
+```rs
+#[derive(Debug)]
+enum Status {
+    Value(u32),
+    Stop,
+}
+
+fn main() {
+    let v1 = Status::Value(10); // 长得像函数，本质也实现了FnMut trait
+    let list_of_statuses: Vec<Status> = (0u32..5).map(Status::Value).collect();
+    println!("{:?}", list_of_statuses); // [Value(0), Value(1), Value(2), Value(3), Value(4)]
+}
+```
+
+### Returning Closures
+
+```rs
+// // error: doesn't have a size known at compile-time
+// fn returns_closure() -> dyn Fn(i32) -> i32 {
+//     |x| x + 1
+// }
+
+// 因为trait作为对象必须放在某种指针后面，所以需要Box
+fn returns_closure() -> Box<dyn Fn(i32) -> i32> {
+    Box::new(|x| x + 1)
+}
+
+fn main() {
+    let f = returns_closure();
+    println!("{}", f(10)); // 11
+}
+```
