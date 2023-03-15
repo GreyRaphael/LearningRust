@@ -20,6 +20,9 @@
   - [Advanced Functions and Closures](#advanced-functions-and-closures)
     - [Function Pointers](#function-pointers)
     - [Returning Closures](#returning-closures)
+  - [macro](#macro)
+    - [Declarative Macros](#declarative-macros)
+    - [Procedural Macros](#procedural-macros)
 
 ## Unsafe Rust
 
@@ -567,5 +570,141 @@ fn returns_closure() -> Box<dyn Fn(i32) -> i32> {
 fn main() {
     let f = returns_closure();
     println!("{}", f(10)); // 11
+}
+```
+
+## macro
+
+宏: 是用来编写可以生成其他代码的代码(metaprogramming)
+
+### Declarative Macros
+
+比如`vec!`, `println!`, `print!`
+
+### Procedural Macros
+
+```rs
+use proc_macro;
+
+#[some_attribute]
+pub fn some_name(input: TokenStream) -> TokenStream {
+    // 本质是代码作为TokenStream传入，处理之后变成代码TokenStream
+}
+```
+
+example: custom procedural `derive` macros
+- `derive`宏仅仅适用于enum, struct
+
+```bash
+# 需要创建一个workspace
+mkdir workspace2
+touch Cargo.toml
+cargo new hello_macro --lib --vcs=none
+cargo new hello_macro_derive --lib --vcs=none
+cargo new pancakes --vcv=none
+
+.
+├── Cargo.toml
+├── hello_macro
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+├── hello_macro_derive
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+└── pancakes
+    ├── Cargo.toml
+    └── src
+        └── main.rs
+```
+
+```toml
+# ./Cargo.toml
+[workspace]
+
+members=[
+    "hello_macro",
+    "hello_macro_derive",
+    "pancakes",
+]
+```
+
+```toml
+# ./hello_macro_derive/Cargo.toml
+[package]
+name = "hello_macro_derive"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro=true
+
+[dependencies]
+syn = "1.0.109"
+quote = "1.0.26"
+```
+
+```toml
+# ./pancakes/Cargo.toml
+[package]
+name = "pancakes"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hello_macro={path="../hello_macro"}
+hello_macro_derive={path="../hello_macro_derive"}
+```
+
+```rs
+// ./hello_macro/src/lib.rs
+pub trait HelloMacro {
+    fn hello_macro();
+}
+```
+
+```rs
+// ./hello_macro_derive/src/lib.rs
+use proc_macro::TokenStream;
+use syn; // 将rust代码字符串转化为可供操作的数据结构
+use quote::quote; //将syn的数据结构重新转化为rust代码
+
+// #[derive(HelloMacro)]的时候，hello_macro_derive就会被调用
+#[proc_macro_derive(HelloMacro)]
+pub fn hello_macro_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+
+    // Build the trait implementation
+    impl_hello_macro(&ast)
+}
+
+fn impl_hello_macro(ast: &syn::DeriveInput) -> TokenStream {
+    let name = &ast.ident;
+    let gen = quote! {
+        impl HelloMacro for #name {
+            fn hello_macro() {
+                println!("Hello, Macro! My name is {}!", stringify!(#name));
+            }
+        }
+    };
+    gen.into()
+}
+```
+
+```rs
+// ./pancakes/src/main.rs
+use hello_macro::HelloMacro;
+use hello_macro_derive::HelloMacro;
+
+#[derive(HelloMacro)]
+struct Pancakes;
+
+#[derive(HelloMacro)]
+struct Apple;
+
+fn main() {
+    Pancakes::hello_macro(); // Hello, Macro! My name is Pancakes!
+    Apple::hello_macro(); // Hello, Macro! My name is Apple!
 }
 ```
