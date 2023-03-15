@@ -12,6 +12,7 @@
     - [Operator overloading](#operator-overloading)
     - [Calling Methods with the Same Name](#calling-methods-with-the-same-name)
     - [super trait](#super-trait)
+    - [Implement External Traits on External Types](#implement-external-traits-on-external-types)
 
 ## Unsafe Rust
 
@@ -394,5 +395,28 @@ impl fmt::Display for Point {
 fn main() {
     let p1 = Point { x: 100, y: 200 };
     p1.outline_print();
+}
+```
+
+### Implement External Traits on External Types
+
+[孤儿规则](ch04-trait.md#basic-usage): trait及类型，至少有一个在本地
+> 通过`newtype`模式绕过该规则, 利用tuple struct创建一个新的类型
+
+```rs
+use std::fmt;
+
+struct Wrapper(Vec<String>); // Display和Vec都是外部的trait或者类型
+
+impl fmt::Display for Wrapper {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // self.0就是Vec
+        write!(f, "[{}]", self.0.join(", "))
+    }
+}
+
+fn main() {
+    let w = Wrapper(vec![String::from("hello"), String::from("world")]);
+    println!("w = {}", w);
 }
 ```
