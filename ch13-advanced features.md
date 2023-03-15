@@ -11,6 +11,7 @@
     - [Associated Types](#associated-types)
     - [Operator overloading](#operator-overloading)
     - [Calling Methods with the Same Name](#calling-methods-with-the-same-name)
+    - [super trait](#super-trait)
 
 ## Unsafe Rust
 
@@ -352,5 +353,46 @@ fn main() {
     println!("{}", Dog::baby_name()); // Spot
     // println!("{}", Animal::baby_name()); // error
     println!("{}", <Dog as Animal>::baby_name()); // puppy
+}
+```
+
+### super trait
+
+trait继承依赖其他的trait
+- 被间接依赖的trait叫做**supertrait**
+- 被间接依赖的trait也需要被实现
+
+```rs
+use std::fmt;
+
+trait OutlinePrint: fmt::Display {
+    fn outline_print(&self) {
+        let output = self.to_string();
+        let len = output.len();
+        println!("{}", "*".repeat(len + 4));
+        println!("*{}*", " ".repeat(len + 2));
+        println!("* {} *", output);
+        println!("*{}*", " ".repeat(len + 2));
+        println!("{}", "*".repeat(len + 4));
+    }
+}
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl OutlinePrint for Point {}
+
+// 因为self.to_string,所以需要实现fmt::Display
+impl fmt::Display for Point {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 100, y: 200 };
+    p1.outline_print();
 }
 ```
