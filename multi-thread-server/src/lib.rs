@@ -1,14 +1,11 @@
-use std::sync::{mpsc, Arc, Mutex};
-use std::thread;
-
-enum Message {
-    NewJob(Job),
-    Terminate,
-}
+use std::{
+    sync::{mpsc, Arc, Mutex},
+    thread,
+};
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: mpsc::Sender<Message>, // 通过channel使得worker接收任务，执行任务
+    sender: Option<mpsc::Sender<Job>>,
 }
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
@@ -23,7 +20,11 @@ impl ThreadPool {
         for id in 0..size {
             workers.push(Worker::new(id, Arc::clone(&receiver)));
         }
-        ThreadPool { workers, sender }
+
+        ThreadPool {
+            workers,
+            sender: Some(sender),
+        }
     }
 
     pub fn execute<F>(&self, f: F)
@@ -31,7 +32,7 @@ impl ThreadPool {
         F: FnOnce() + Send + 'static,
     {
         let job = Box::new(f);
-        self.sender.send(Message::NewJob(job)).unwrap();
+        self.sender.as_ref().unwrap().send(job).unwrap();
     }
 }
 
@@ -41,23 +42,25 @@ struct Worker {
 }
 
 impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Worker {
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
         let thread = thread::spawn(move || loop {
-            let msg = receiver.lock().unwrap().recv().unwrap();
-            match msg {
-                Message::NewJob(job) => {
-                    println!("Worker {} got a job; executing.", id);
+            let message = receiver.lock().unwrap().recv();
+            match message {
+                Ok(job) => {
+                    println!("Worker {id} got a job; executing.");
                     job();
                     // (*job)(); // 应该能够调用，Rust不完善
                 }
-                Message::Terminate => {
-                    println!("Worker {} told to terminate", id);
+                Err(_) => {
+                    // channel被sender drop，receiver这里就会报错
+                    println!("Worker {id} disconnected; shutting down.");
                     break;
                 }
             }
         });
+
         Worker {
-            id: id,
+            id,
             thread: Some(thread),
         }
     }
@@ -65,15 +68,13 @@ impl Worker {
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
-        for worker in &self.workers {
-            self.sender.send(Message::Terminate).unwrap();
-            println!("Sending terminate message to workers {}", worker.id);
-        }
+        drop(self.sender.take());
+
         for worker in &mut self.workers {
+            println!("Shutting down worker {}", worker.id);
             if let Some(thread) = worker.thread.take() {
                 thread.join().unwrap();
             }
-            println!("Shutting down worker {}", worker.id);
         }
     }
 }
