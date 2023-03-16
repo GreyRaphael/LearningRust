@@ -20,6 +20,7 @@
   - [Advanced Functions and Closures](#advanced-functions-and-closures)
     - [Function Pointers](#function-pointers)
     - [Returning Closures](#returning-closures)
+    - [`Fn`, `FnOnce`, `FnBox`](#fn-fnonce-fnbox)
   - [macro](#macro)
     - [Declarative Macros](#declarative-macros)
     - [Procedural Macros](#procedural-macros)
@@ -570,6 +571,80 @@ fn returns_closure() -> Box<dyn Fn(i32) -> i32> {
 fn main() {
     let f = returns_closure();
     println!("{}", f(10)); // 11
+}
+```
+
+### `Fn`, `FnOnce`, `FnBox`
+
+example: by `Fn`
+
+```rs
+type Job = Box<dyn Fn() + Send + 'static>;
+
+fn execute<F: Fn() + Send + 'static>(f: F) -> Box<F> {
+    Box::new(f)
+}
+
+fn main() {
+    let c1 = || println!("ok");
+    let b1 = execute(c1); // Box<||->()>
+    let b2: Job = execute(c1); // Job
+    b1(); //ok
+    (*b1)(); // ok
+    b2(); // ok
+    (*b2)(); // ok
+}
+```
+
+example: by `FnOnce`
+
+```rs
+type Job = Box<dyn FnOnce() + Send + 'static>;
+
+fn execute<F: FnOnce() + Send + 'static>(f: F) -> Box<F> {
+    Box::new(f)
+}
+
+fn main() {
+    let c1 = || println!("ok");
+    let b1 = execute(c1); // Box<||->()>
+    let b2: Job = execute(c1); // Job
+    b1(); //ok, impl Fn
+    (*b1)(); // ok, impl Fn
+    // b2(); // ok, 可以这么调用
+    (*b2)(); // error, the size of `dyn FnOnce() + Send` cannot be statically determined
+    // 应该是rust语法不太完善导致
+}
+```
+
+example: by `FnBox`
+
+```rs
+type Job = Box<dyn FnBox + Send + 'static>;
+
+fn execute<F: FnOnce() + Send + 'static>(f: F) -> Box<F> {
+    Box::new(f)
+}
+
+fn main() {
+    let c1 = || println!("ok");
+    let b1 = execute(c1); // Box<||->()>
+    let b2: Job = execute(c1); // Job
+    b1(); //ok, impl Fn
+    (*b1)(); // ok, impl Fn
+    b2.call_box();
+}
+
+trait FnBox {
+    fn call_box(self: Box<Self>);
+}
+
+impl<F: FnOnce()> FnBox for F {
+    fn call_box(self: Box<Self>) {
+        // 获取self的所有权
+        // self();
+        (*self)(); // 两种方法都能调用
+    }
 }
 ```
 
