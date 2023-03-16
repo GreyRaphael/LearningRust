@@ -11,7 +11,7 @@ pub struct ThreadPool {
     sender: mpsc::Sender<Message>, // 通过channel使得worker接收任务，执行任务
 }
 
-type Job = Box<dyn FnBox + Send + 'static>;
+type Job = Box<dyn FnOnce() + Send + 'static>;
 
 impl ThreadPool {
     pub fn new(size: usize) -> ThreadPool {
@@ -47,7 +47,8 @@ impl Worker {
             match msg {
                 Message::NewJob(job) => {
                     println!("Worker {} got a job; executing.", id);
-                    job.call_box();
+                    job();
+                    // (*job)(); // 应该能够调用，Rust不完善
                 }
                 Message::Terminate => {
                     println!("Worker {} told to terminate", id);
@@ -59,16 +60,6 @@ impl Worker {
             id: id,
             thread: Some(thread),
         }
-    }
-}
-
-trait FnBox {
-    fn call_box(self: Box<Self>);
-}
-
-impl<F: FnOnce()> FnBox for F {
-    fn call_box(self: Box<F>) {
-        (*self)()
     }
 }
 
