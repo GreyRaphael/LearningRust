@@ -209,9 +209,9 @@ fn main() {
 
 与函数获取参数的方式一样, 创建闭包时，Rust会推断出具体使用下面的哪种闭包
 > 所有实现`Fn`的都实现了`FnMut`，所有实现了`FnMut`的都实现了`FnOnce`
-- 取得所有权: FnOnce, 所有的闭包都实现了`FnOnce`
-- 可变借用: FnMut，没有移动**捕获变量**的实现了`FnMut`
-- 不可变借用: Fn，无需可变访问**捕获变量**的闭包实现了`Fn`
+- 取得所有权: `FnOnce`, applies to closures that can be called once. All closures implement at least this trait, because all closures can be called. A closure that moves captured values out of its body will only implement FnOnce and none of the other Fn traits, because it can only be called once.
+- 可变借用: `FnMut`，applies to closures that don’t move captured values out of their body, but that might mutate the captured values. These closures can be called more than once.
+- 不可变借用: `Fn`，applies to closures that don’t move captured values out of their body and that don’t mutate captured values, as well as closures that capture nothing from their environment. These closures can be called more than once without mutating their environment, which is important in cases such as calling a closure multiple times concurrently.
 
 闭包在参数列表前使用`move`关键字，可以强制取得它在所使用环境的控制权
 - 当讲闭包传递给新线程，以移动数据使其归新线程所有，最为有用
