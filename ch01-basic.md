@@ -132,6 +132,17 @@ fn main() {
 | Binary          | 0b1111_0000 |
 | Byte(u8 only)   | b'A'        |
 
+example: unsigned integer overflow
+
+```rs
+fn main() {
+    let a: u8 = 255;
+    // let b = a + 1; // error, will overflow
+    let b = a.wrapping_add(1);
+    println!("{}", b); // 0
+}
+```
+
 ### float value
 
 - f32
