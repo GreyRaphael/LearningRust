@@ -179,10 +179,26 @@ fn main() {
 
 ```rs
 fn main() {
-    let x='a';
-    let y='😂';
-    println!("x={}", x);
-    println!("y={}", y);
+    let x = 'a';
+    let y = '😂';
+    let z = '我';
+    println!("x={}, in memory: {} bytes", x, std::mem::size_of_val(&x)); // 4 bytes
+    println!("y={}, in memory: {} bytes", y, std::mem::size_of_val(&y)); // 4 bytes
+    println!("z={}, in memory: {} bytes", z, std::mem::size_of_val(&z)); // 4 bytes
+
+    // String本质是Vec<u8>
+    let mut s1 = String::new();
+    s1.push(z);
+    // 在stack上指针的size, 包含了3部分: addr, capacity, length, 每一个8bytes，所以24bytes
+    println!("s1={}, in memory: {} bytes", s1, std::mem::size_of_val(&s1)); // 24 bytes
+    // 在heap上的占用的内存大小
+    println!("s1={}, in memory: {} bytes", s1, s1.bytes().len()); // 3 bytes
+
+    for _ in 0..10{
+        s1.push(z);
+    }
+    println!("s1={}, in memory: {} bytes", s1, std::mem::size_of_val(&s1)); // 24 bytes
+    println!("s1={}, in memory: {} bytes", s1, s1.bytes().len()); // 33 bytes
 }
 ```
 
