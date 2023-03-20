@@ -199,6 +199,8 @@ fn main() {
     }
     println!("s1={}, in memory: {} bytes", s1, std::mem::size_of_val(&s1)); // 24 bytes
     println!("s1={}, in memory: {} bytes", s1, s1.bytes().len()); // 33 bytes
+    println!("s1={}, in memory: {} bytes", s1, std::mem::size_of_val(&s1[..])); // 33 bytes
+    println!("s1={}, in memory: {} bytes", s1, std::mem::size_of_val(s1.as_str())); // 33 bytes
 }
 ```
 
