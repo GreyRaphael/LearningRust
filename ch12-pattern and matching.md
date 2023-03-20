@@ -13,6 +13,27 @@
     - [match guard](#match-guard)
     - [`@` binding](#-binding)
 
+simple example:
+
+```rs
+struct Custom {
+    num: i32,
+}
+
+fn main() {
+    let (a, mut b) = (10, 20.3);
+    b = 2000.4;
+    println!("{}, {}", a, b);
+
+    let (c, d, e, f, g);
+    (d, e) = (1, 2);
+
+    [c, .., f, _] = [11, 22, 33, 44, 55];
+    Custom { num: g } = Custom { num: 1000 };
+    println!("{},{},{},{},{}", c, d, e, f, g); // 11,1,2,44,1000
+}
+```
+
 模式匹配类型
 - 可失败的: `match`, `if let`, `while let`
 - 不可失败的: `let`, `for`, 函数参数
