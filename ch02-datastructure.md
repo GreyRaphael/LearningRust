@@ -8,6 +8,9 @@
   - [`Vec<T>`](#vect)
     - [vector store different type of data](#vector-store-different-type-of-data)
   - [String](#string)
+    - [string operation](#string-operation)
+    - [string escape](#string-escape)
+    - [string visit element](#string-visit-element)
   - [`HashMap<K, V>`](#hashmapk-v)
 
 ## struct
@@ -427,6 +430,43 @@ Rust**核心语言**层面，只有一种字符串类型, 即字符串切片: `&
 - 可增长、可修改、可拥有
 - utf8编码
 
+### string operation
+
+```rs
+fn main() {
+    let s1 = String::from("I like c++. Learning c++ is my favorite!");
+    let new_s1 = s1.replace("c++", "rust");
+    dbg!(new_s1);
+    let new_s2 = s1.replacen("c++", "rust", 1);
+    dbg!(new_s2);
+
+    let mut s2 = String::from("I like c++. Learning c++ is my favorite!");
+    let new_s3 = s2.replace_range(7..8, "R");
+    dbg!(new_s3); // ()
+    dbg!(s2); // s2 = "I like R++. Learning c++ is my favorite!"
+
+    let mut s3 = String::from("hello,你好");
+    let c1 = s3.pop();
+    let c2 = s3.pop();
+    dbg!(c1); // 好
+    dbg!(c2); // 你
+    dbg!(s3); // hello,
+
+    let mut s4 = String::from("你好,china");
+    dbg!(std::mem::size_of_val(&s4)); // 24
+    dbg!(std::mem::size_of_val(&s4[..])); // 12
+    dbg!(std::mem::size_of_val(s4.as_str())); // 12
+    s4.remove(0);
+    dbg!(&s4); // 好,china
+
+    s4.truncate(4);
+    dbg!(&s4); // 好,
+
+    s4.clear();
+    dbg!(s4); // ""
+}
+```
+
 ```rs
 fn main() {
     // method1
@@ -459,6 +499,18 @@ fn main() {
 ```
 
 ```rs
+fn main() {
+    let string_append = String::from("hello ");
+    let string_rust = String::from("rust");
+    let result = string_append + &string_rust;
+    let mut result = result + "!";
+    result += "!!!";
+
+    println!("{}", result); // hello rust!!!!
+}
+```
+
+```rs
 // &s5的类型是&String, 但是被强制解引用转换成slice &str
 fn add(self, s:&str)->String {
 
@@ -485,6 +537,52 @@ fn main() {
     println!("{}", s3);
 }
 ```
+
+### string escape
+
+```rs
+fn main() {
+    // 通过 \ + 字符的十六进制表示，转义输出一个字符
+    let byte_escape = "I'm writing \x52\x75\x73\x74!";
+    println!("What are you doing\x3F (\\x3F means ?) {}", byte_escape);
+    // What are you doing? (\x3F means ?) I'm writing Rust!
+
+    // \u 可以输出一个 unicode 字符
+    let unicode_codepoint = "\u{211D}";
+    let character_name = "\"DOUBLE-STRUCK CAPITAL R\"";
+
+    println!(
+        "Unicode character {} (U+211D) is called {}",
+        unicode_codepoint, character_name
+    );
+    // Unicode character ℝ (U+211D) is called "DOUBLE-STRUCK CAPITAL R"
+
+    // 换行了也会保持之前的字符串格式
+    let long_string = "String literals
+                        can span multiple lines.
+                        The linebreak and indentation here ->\
+                        <- can be escaped too!";
+    println!("{}", long_string);
+}
+```
+
+```rs
+fn main() {
+    println!("{}", "hello \\x52\\x75\\x73\\x74");
+    let raw_str = r"Escapes don't work here: \x3F \u{211D}";
+    println!("{}", raw_str);
+
+    // 如果字符串包含双引号，可以在开头和结尾加 #
+    let quotes = r#"And then I said: "There is no escape!""#;
+    println!("{}", quotes);
+
+    // 如果还是有歧义，可以继续增加，没有限制
+    let longer_delimiter = r###"A string with "# in it. And even "##!"###;
+    println!("{}", longer_delimiter);
+}
+```
+
+### string visit element
 
 rust字符串不支持索引语法访问: `str1[0]`不允许
 > `String`本质是对`Vec<u8>`的包装
