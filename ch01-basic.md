@@ -773,6 +773,22 @@ fn main() {
 }
 ```
 
+```rs
+// since Rust 1.31
+fn main() {
+   let mut s = String::from("hello");
+
+    let r1 = &s;
+    let r2 = &s;
+    println!("{} and {}", r1, r2);
+    // 新编译器中，r1,r2作用域在这里结束
+
+    let r3 = &mut s;
+    println!("{}", r3);
+} // 老编译器中，r1、r2、r3作用域在这里结束
+  // 新编译器中，r3作用域在这里结束
+```
+
 悬空指针(Dangling Reference): 一个指针引用了内存中的某个地址，而这块内存可能已经释放并分配给其他人使用
 > Rust编译器能够保证引用永远都不是悬空指针：如果你引用了某些数据，编译器将保证在引用离开作用域之前，数据不会被销毁
 
