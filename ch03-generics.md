@@ -82,6 +82,19 @@ fn get_largest2<T>(list: &[T]) -> T { //这一行进行泛型改造
 }
 ```
 
+example: generic add
+
+```rs
+fn add<T: std::ops::Add<Output = T>>(a: T, b: T) -> T { // 泛型改造
+    a + b
+}
+
+fn main() {
+    dbg!(add(10, 20));
+    dbg!(add(10.1, 20.2));
+}
+```
+
 ## struct with generic
 
 ```rs
