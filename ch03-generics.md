@@ -3,8 +3,8 @@
 - [Generic Data Type](#generic-data-type)
   - [function with generic](#function-with-generic)
   - [struct with generic](#struct-with-generic)
-    - [enum with generic](#enum-with-generic)
-    - [method with generic](#method-with-generic)
+  - [enum with generic](#enum-with-generic)
+  - [method with generic](#method-with-generic)
 
 > 泛型: 提升代码复用能力，使其适用于多种数据类型
 
@@ -119,7 +119,7 @@ fn main() {
 }
 ```
 
-### enum with generic
+## enum with generic
 
 比如`Option<T>`, `Result<T, E>`
 
@@ -135,7 +135,7 @@ enum Result<T, E> {
 }
 ```
 
-### method with generic
+## method with generic
 
 ```rs
 struct Point<T> {
@@ -183,5 +183,23 @@ fn main() {
     let p2 = Point { x: "hello", y: 'c' }; // <&str, char>
     let p3 = p1.mixup(p2);
     println!("{}-{}", p3.x, p3.y); // 10-c
+}
+```
+
+```rs
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+impl Point<f32> {
+    fn distance_from_origin(&self) -> f32 {
+        (self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
+}
+
+fn main() {
+    let p: Point<f32> = Point { x: 10.0, y: 10.0 };
+    println!("{}", p.distance_from_origin());
 }
 ```
