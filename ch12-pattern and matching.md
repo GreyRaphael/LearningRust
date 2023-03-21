@@ -288,6 +288,39 @@ fn main(){
 }
 ```
 
+解构Array
+
+```rs
+fn main() {
+    let arr: [u16; 2] = [114, 514];
+    let [x, y] = arr;
+
+    println!("{},{}", x, y)
+}
+```
+
+解构Slice
+
+```rs
+fn main() {
+    let arr: &[u16] = &[114, 514];
+
+    if let [x, ..] = arr { // x is &u16
+        assert_eq!(x, &114);
+    }
+
+    if let &[.., y] = arr { // y is u16
+        assert_eq!(y, 514);
+    }
+
+    let arr: &[u16] = &[]; // empty slice
+
+    assert!(matches!(arr, [..]));
+    dbg!(arr);
+    assert!(!matches!(arr, [x, ..]));
+}
+```
+
 ### specifier `_`
 
 ```rs
