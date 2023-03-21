@@ -440,3 +440,40 @@ fn main(){
     }
 }
 ```
+
+since Rust 1.53
+
+```rs
+fn main() {
+    match 1 {
+        num @ (1 | 2) => {
+            println!("{}", num); // 1
+        }
+        _ => {}
+    }
+}
+```
+
+使用 `@` 还可以在绑定新变量的同时，对目标进行解构, since Rust 1.56
+
+```rs
+#[derive(Debug)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+fn main() {
+    // 绑定新变量 `p`，同时对 `Point` 进行解构
+    let p @ Point { x: px, y: py } = Point { x: 10, y: 23 };
+    println!("x: {}, y: {}", px, py);
+    println!("{:?}", p);
+
+    let point = Point { x: 10, y: 5 };
+    if let p @ Point { x: 10, y } = point {
+        println!("x is 10 and y is {} in {:?}", y, p);
+    } else {
+        println!("x was not 10 :(");
+    }
+}
+```
