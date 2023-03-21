@@ -243,6 +243,60 @@ fn main() {
 }
 ```
 
+数组元素为未实现Copy trait的类型
+
+```rs
+fn main() {
+    let a1 = [5; 3]; // [5, 5, 5]
+
+    // let a2=[String::from("hello"); 3]; // error
+    let a3 = [
+        String::from("hello"),
+        String::from("hello"),
+        String::from("hello"),
+    ];
+    // 简写
+    let a4: [String; 3] = core::array::from_fn(|i| String::from("hello"));
+
+    dbg!(&a1);
+    // dbg!(&a2);
+    dbg!(&a3);
+    dbg!(&a4);
+}
+```
+
+2D Array
+
+```rs
+fn main() {
+    // 编译器自动推导出one的类型
+    let one = [1, 2, 3];
+    // 显式类型标注
+    let two: [u8; 3] = [1, 2, 3];
+    let blank1 = [0; 3];
+    let blank2: [u8; 3] = [0; 3];
+
+    // arrays是一个二维数组，其中每一个元素都是一个数组，元素类型是[u8; 3]
+    let arrays: [[u8; 3]; 4] = [one, two, blank1, blank2];
+
+    // 借用arrays的元素用作循环中
+    for a in &arrays {
+        print!("{:?}: ", a);
+        // 将a变成一个迭代器，用于循环
+        // 你也可以直接用for n in a {}来进行循环
+        for n in a.iter() {
+            print!("\t{} + 10 = {}", n, n + 10);
+        }
+
+        let mut sum = 0;
+        for i in 0..a.len() {
+            sum += a[i];
+        }
+        println!("\t({:?} = {})", a, sum);
+    }
+}
+```
+
 ### String
 
 ```rs
