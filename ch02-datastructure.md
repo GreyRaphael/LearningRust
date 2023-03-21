@@ -5,6 +5,7 @@
     - [struct method](#struct-method)
   - [enum](#enum)
     - [`Option<T>`](#optiont)
+    - [`matches!`](#matches)
   - [`Vec<T>`](#vect)
     - [vector store different type of data](#vector-store-different-type-of-data)
   - [String](#string)
@@ -368,6 +369,45 @@ fn plus_one(x: Option<i32>) -> Option<i32> {
         None => None, 
         Some(i) => Some(i + 1),
     }
+}
+```
+
+### `matches!`
+
+`matches`: 它可以将一个表达式跟模式进行匹配，然后返回匹配的结果 `true` or `false`。
+
+```rs
+fn main() {
+    #![allow(unused)]
+    fn main() {
+        let foo = 'f';
+        assert!(matches!(foo, 'A'..='Z' | 'a'..='z'));
+
+        let bar = Some(4);
+        assert!(matches!(bar, Some(x) if x > 2));
+    }
+}
+```
+
+```rs
+#[derive(Debug)]
+enum MyEnum {
+    Foo,
+    Bar,
+}
+
+fn main() {
+    let v = vec![MyEnum::Foo, MyEnum::Bar, MyEnum::Foo];
+    dbg!(&v);
+    // v.iter().filter(|x| x == MyEnum::Foo); error, 枚举成员无法直接比较
+    let v2: Vec<&MyEnum> = v.iter().filter(|x| matches!(x, MyEnum::Foo)).collect();
+    dbg!(&v2);
+
+    let v3 = v.iter().filter(|x| matches!(x, MyEnum::Foo));
+    for i in v3 {
+        print!("{:?}, ", i);
+    }
+    println!()
 }
 ```
 
