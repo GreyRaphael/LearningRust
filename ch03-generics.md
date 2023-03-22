@@ -5,6 +5,7 @@
   - [struct with generic](#struct-with-generic)
   - [enum with generic](#enum-with-generic)
   - [method with generic](#method-with-generic)
+  - [const generic](#const-generic)
 
 > 泛型: 提升代码复用能力，使其适用于多种数据类型
 
@@ -201,5 +202,100 @@ impl Point<f32> {
 fn main() {
     let p: Point<f32> = Point { x: 10.0, y: 10.0 };
     println!("{}", p.distance_from_origin());
+}
+```
+
+## const generic
+
+数组长度不同，类型就不同
+> `[i32;3]`和`[i32;2]`是不同的类型
+
+```rs
+fn display_array(arr: [i32; 3]) {
+    println!("{:?}", arr);
+}
+fn main() {
+    let arr: [i32; 3] = [1, 2, 3];
+    display_array(arr);
+
+    let arr: [i32; 2] = [1, 2];
+    // display_array(arr); // error, [i32;3]和[i32;2]是不同的类型
+}
+```
+
+solution by slice
+
+```rs
+fn display_array(arr: &[i32]) {
+    println!("{:?}", arr);
+}
+fn main() {
+    let arr: [i32; 3] = [1, 2, 3];
+    display_array(&arr); // slice as argument
+
+    let arr: [i32; 2] = [1, 2];
+    display_array(&arr);
+}
+```
+
+suport for `f64` by slice
+
+```rs
+fn display_array<T: std::fmt::Debug>(arr: &[T]) {
+    println!("{:?}", arr);
+}
+fn main() {
+    let arr: [i32; 3] = [1, 2, 3];
+    display_array(&arr);
+
+    let arr: [i32; 2] = [1, 2];
+    display_array(&arr);
+
+    // support for float
+    let arr = [1.1, 2.2];
+    display_array(&arr);
+}
+```
+
+如果要获取arr的所有权，就需要**常量泛型** `const`
+
+```rs
+fn display_array<T, const N: usize>(arr: [T; N])
+where
+    T: std::fmt::Debug,
+{
+    println!("{:?}", arr);
+}
+fn main() {
+    let arr: [i32; 3] = [1, 2, 3];
+    display_array(arr);
+
+    let arr: [i32; 2] = [1, 2];
+    display_array(arr);
+
+    let arr = [1.1, 2.2];
+    display_array(arr);
+}
+```
+
+simple solution
+
+```rs
+fn display_array<T>(arr: T)
+where
+    T: std::fmt::Debug,
+{
+    println!("{:?}", arr);
+}
+
+fn main() {
+    let arr: [i32; 3] = [1, 2, 3];
+    display_array(arr);
+
+    let arr: [i32; 2] = [1, 2];
+    display_array(arr);
+
+    let arr = [1.1, 2.2];
+    display_array(arr);
 }
 ```
