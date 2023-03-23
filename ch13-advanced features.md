@@ -260,6 +260,49 @@ fn main() {
 }
 ```
 
+泛型改造
+
+```rs
+use std::ops::Add;
+
+#[derive(Debug)]
+struct Point<T>
+where
+    T: Add<T, Output = T>,
+{
+    x: T,
+    y: T,
+}
+
+impl<T> Add for Point<T>
+where
+    T: Add<T, Output = T>,
+{
+    type Output = Point<T>;
+
+    fn add(self, other: Point<T>) -> Point<T> {
+        Point {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 1, y: 0 };
+    let p2 = Point { x: 2, y: 3 };
+    println!("{:?}", p1);
+    println!("{:?}", p2);
+    println!("{:?}", p1 + p2); // Point { x: 3, y: 3 }
+
+    let p3 = Point { x: 1.1, y: 0.2 };
+    let p4 = Point { x: 2.1, y: 3.2 };
+    println!("{:?}", p3);
+    println!("{:?}", p4);
+    println!("{:?}", p3 + p4); // Point { x: 3.2, y: 3.4 }
+}
+```
+
 其中`std::ops::Add` trait里面泛型指定了默认类型`<Rhs=Self>`
 
 ```rs
