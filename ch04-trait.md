@@ -235,6 +235,7 @@ pub fn notify<T: Summary>(item: T) {
 ```
 
 复杂情形trait作为参数
+> `impl Trait`本质是trait bound的语法糖，适用于简单情形
 
 ```rs
 pub fn notify2<T:Summary>(item1: T, item2: T) {
@@ -243,6 +244,11 @@ pub fn notify2<T:Summary>(item1: T, item2: T) {
 }
 
 pub fn notify3(item1: impl Summary, item2: impl Summary) {
+    println!("Breaking New, {}", item1.summarize1());
+    println!("Breaking New, {}", item2.summarize2());
+}
+
+pub fn notify4(item1: &impl Summary, item2: &impl Summary) {
     println!("Breaking New, {}", item1.summarize1());
     println!("Breaking New, {}", item2.summarize2());
 }
@@ -257,6 +263,11 @@ pub fn notify2<T:Summary+Display>(item1: T, item2: T) {
 }
 
 pub fn notify3(item1: impl Summary+Display, item2: impl Summary+Display) {
+    println!("Breaking New, {}", item1.summarize1());
+    println!("Breaking New, {}", item2.summarize2());
+}
+
+pub fn notify4(item1: &(impl Summary+Display), item2: &(impl Summary+Display)) {
     println!("Breaking New, {}", item1.summarize1());
     println!("Breaking New, {}", item2.summarize2());
 }
