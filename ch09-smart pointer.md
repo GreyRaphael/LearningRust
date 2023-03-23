@@ -126,6 +126,21 @@ fn main() {
 - 编译器对deref进行一系列调用，在编译时完成，没有额外的性能开销
 
 ```rs
+fn main() {
+    let n = 100;
+    func(&n);
+}
+
+fn func(num: &i32) {
+    println!("{:p}", num); // 0x7fffdf60b654
+    println!("{}", num); // 100, 隐式解引用
+    println!("{}", *num); // 100
+    let b=num; // &i32
+    let c=*num; // i32
+}
+```
+
+```rs
 use std::ops::Deref;
 
 #[derive(Debug)]
