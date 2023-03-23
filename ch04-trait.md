@@ -7,6 +7,7 @@
   - [trait as return](#trait-as-return)
   - [trait example](#trait-example)
   - [conditional trait bound, `impl<T>`](#conditional-trait-bound-implt)
+- [example](#example)
 
 > Trait: 告诉编译器，某种类型具有哪些并且可以与其它类型共享的功能。**抽象地定义共享行为**，与其他语言中的interface有点类似
 
@@ -557,5 +558,60 @@ fn main() {
     println!("{}", s2);
     println!("{}", s3);
     println!("{}", s4);
+}
+```
+
+## example
+
+implement `Display` for custom type
+
+```rs
+use std::fmt;
+use std::fmt::Display;
+
+#[derive(Debug)]
+enum FileState {
+    Open,
+    Closed,
+}
+
+#[derive(Debug)]
+struct File {
+    name: String,
+    data: Vec<u8>,
+    state: FileState,
+}
+
+impl Display for FileState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // match *self {
+        match self { // 隐式解引用
+            FileState::Open => write!(f, "OPEN"),
+            FileState::Closed => write!(f, "CLOSED"),
+        }
+    }
+}
+
+impl Display for File {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "<{} ({})>", self.name, self.state)
+    }
+}
+
+impl File {
+    fn new(name: &str) -> File {
+        File {
+            name: String::from(name),
+            data: Vec::new(),
+            state: FileState::Closed,
+        }
+    }
+}
+
+fn main() {
+    let f6 = File::new("f6.txt");
+    //...
+    println!("{}", f6); // <f6.txt (CLOSED)>
+    println!("{:?}", f6); // File { name: "f6.txt", data: [], state: Closed }
 }
 ```
