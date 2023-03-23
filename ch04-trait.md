@@ -294,13 +294,72 @@ where
 
 ```rs
 pub fn notify6(s:&str)->impl Summary {
-    // 只能返回一种类型，如果采用bool判断，进而返回不同的类型，会报错
+    // 只能返回一种类型NewsArticle或者Tweet，根据bool判断返回不同的类型，会报错
     NewsArticle{
         headline:String::from("Trump win!"),
         content:String::from("Trump win the 2024 election!"),
         author: String::from("Joe Biden"),
         location: String::from("Washington Dc"),
     }
+}
+```
+
+error example: 返回多种类型
+
+```rs
+// error
+pub fn returns_summarizable(flag: bool) -> impl Summary {
+    if flag {
+        NewsArticle {
+            headline: String::from("Biden will win"),
+            location: String::from("Washington"),
+            author: String::from("Hilary"),
+            content: String::from("Biden will win the election"),
+        }
+    } else {
+        Tweet {
+            username: String::from("Trump"),
+            content: String::from("Trump will win"),
+            reply: true,
+            retweet: true,
+        }
+    }
+}
+```
+
+solution: trait object
+
+```rs
+// lib.rs
+pub fn returns_summarizable(flag: bool) -> Box<dyn Summary> {
+    if flag {
+        let item = NewsArticle {
+            headline: String::from("Biden will win"),
+            location: String::from("Washington"),
+            author: String::from("Hilary"),
+            content: String::from("Biden will win the election"),
+        };
+        Box::new(item)
+    } else {
+        let item = Tweet {
+            username: String::from("Trump"),
+            content: String::from("Trump will win"),
+            reply: true,
+            retweet: true,
+        };
+        Box::new(item)
+    }
+}
+```
+
+```rs
+use project1::returns_summarizable;
+
+fn main() {
+    let summary1 = returns_summarizable(true); // 自动识别为Box<dyn Summary>类型
+    println!("{:?}", summary1.summarize1());
+    let summary2 = returns_summarizable(false);
+    println!("{:?}", summary2.summarize1());
 }
 ```
 
