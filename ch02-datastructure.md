@@ -734,6 +734,8 @@ HashMap
 - 数据存储在heap上
 - 内部元素同构：所有的key同一种类型，所有的value同一种类型
 
+> HashMap 使用的哈希函数是 SipHash, 性能不高，高性能推荐第三方[aHash](https://crates.io/crates/ahash)
+
 ```rs
 use std::collections::HashMap;
 
@@ -779,6 +781,23 @@ fn main() {
     let dict: HashMap<_, _> = names.iter().zip(scores.iter()).collect(); // 必须指明类型，因为collect可以返回多种类型, _ 用于自动推断
 
     println!("{:?}", dict); // {"moris": 30, "tom": 20, "grey": 10}
+}
+```
+
+collect vector to hashmap
+
+```rs
+use std::collections::HashMap;
+
+fn main() {
+    let teams_list = vec![
+        ("中国队".to_string(), 100),
+        ("美国队".to_string(), 10),
+        ("日本队".to_string(), 50),
+    ];
+
+    let teams_map: HashMap<_, _> = teams_list.into_iter().collect();
+    println!("{:?}", teams_map) // {"美国队": 10, "日本队": 50, "中国队": 100}
 }
 ```
 
@@ -832,6 +851,32 @@ fn main() {
     - 合并现有的v和新v
   - k不存在
     - 添加新v
+
+```rs
+fn main() {
+    use std::collections::HashMap;
+
+    let mut scores = HashMap::new();
+
+    scores.insert("Blue", 10);
+
+    // 覆盖已有的值
+    let old = scores.insert("Blue", 20);
+    assert_eq!(old, Some(10));
+
+    // 查询新插入的值
+    let new = scores.get("Blue");
+    assert_eq!(new, Some(&20));
+
+    // 查询Yellow对应的值，若不存在则插入新值
+    let v = scores.entry("Yellow").or_insert(5);
+    assert_eq!(*v, 5); // 不存在，插入5
+
+    // 查询Yellow对应的值，若不存在则插入新值
+    let v = scores.entry("Yellow").or_insert(50);
+    assert_eq!(*v, 5); // 已经存在，因此50没有插入
+}
+```
 
 ```rs
 use std::collections::HashMap;
