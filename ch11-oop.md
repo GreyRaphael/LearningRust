@@ -111,7 +111,7 @@ pub trait Draw{
 pub struct Screen{
     // Vec要存各种实现了Draw trait的struct，所以使用Box<dyn Draw>>
     // 泛型只能放一种类型比如Button
-    // Draw就是trait对象
+    // <Box<dyn Draw>就是创建的trait对象
     pub components: Vec<Box<dyn Draw>>,
 }
 
@@ -149,6 +149,7 @@ impl Draw for SelectBox{
 }
 
 // // ---对比泛型实现-----------
+// // 实例化的时候，components里面的都是同一种类型，不能同时容纳Button和SelectBox
 // pub struct Screen<T:Draw>{
 //     pub components: Vec<T>,
 // }
