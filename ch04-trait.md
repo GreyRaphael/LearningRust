@@ -9,6 +9,7 @@
   - [conditional trait bound, `impl<T>`](#conditional-trait-bound-implt)
 - [implement `Display` for custom type](#implement-display-for-custom-type)
 - [trait object](#trait-object)
+- [`self` vs `Self`](#self-vs-self)
 
 > Trait: 告诉编译器，某种类型具有哪些并且可以与其它类型共享的功能。**抽象地定义共享行为**，与其他语言中的interface有点类似
 
@@ -665,5 +666,35 @@ fn main() {
 
     draw2(&x);
     draw2(&y);
+}
+```
+
+当一个特征的所有方法都有如下属性时，它的对象才是安全的：
+- 方法的返回类型不能是 `Self`
+- 方法没有任何泛型参数
+
+## `self` vs `Self`
+
+- `self`:指代的就是当前的实例对象, 比如`btn`
+- `Self`: 指代的是实例对象的类型, 比如`Button`
+
+```rs
+trait Draw {
+    fn draw(&self) -> Self;
+}
+
+#[derive(Clone)]
+struct Button;
+
+
+impl Draw for Button {
+    fn draw(&self) -> Self {
+        return self.clone();
+    }
+}
+
+fn main() {
+    let btn = Button;
+    let newb = btn.draw();
 }
 ```
