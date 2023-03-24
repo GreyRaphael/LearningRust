@@ -477,6 +477,45 @@ fn main() {
 }
 ```
 
+> solution2: Vector + Trait Object
+
+```rs
+trait SheetCell {
+    fn display(&self);
+}
+
+struct Int(i32);
+struct Float(f64);
+struct Text(String);
+
+impl SheetCell for Int {
+    fn display(&self) {
+        println!("{}", self.0)
+    }
+}
+impl SheetCell for Float {
+    fn display(&self) {
+        println!("{}", self.0)
+    }
+}
+impl SheetCell for Text {
+    fn display(&self) {
+        println!("{}", self.0)
+    }
+}
+
+fn main() {
+    let v: Vec<Box<dyn SheetCell>> = vec![
+        Box::new(Int(100)),
+        Box::new(Float(18.987)),
+        Box::new(Text(String::from("hello"))),
+    ];
+    for item in v {
+        item.display();
+    }
+}
+```
+
 ## String
 
 - 字符串数据结构复杂, 基于Byet的集合
