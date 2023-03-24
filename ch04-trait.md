@@ -7,7 +7,7 @@
   - [trait as return](#trait-as-return)
   - [trait example](#trait-example)
   - [conditional trait bound, `impl<T>`](#conditional-trait-bound-implt)
-- [example](#example)
+- [implement `Display` for custom type](#implement-display-for-custom-type)
 
 > Trait: 告诉编译器，某种类型具有哪些并且可以与其它类型共享的功能。**抽象地定义共享行为**，与其他语言中的interface有点类似
 
@@ -561,9 +561,7 @@ fn main() {
 }
 ```
 
-## example
-
-implement `Display` for custom type
+## implement `Display` for custom type
 
 ```rs
 use std::fmt;
