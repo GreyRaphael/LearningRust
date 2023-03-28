@@ -7,6 +7,7 @@
   - [lifetime rules](#lifetime-rules)
     - [`'static` lifetime](#static-lifetime)
   - [lifetime with generics](#lifetime-with-generics)
+  - [lifetime bound](#lifetime-bound)
 
 生命周期: 让**引用**保持有效的作用域
 > 生命周期目的是为了避免`dangling reference`
@@ -286,5 +287,46 @@ fn main() {
     println!("{}", res);// Donarld Trump
     let res = longest_with_announcement("Donarld Trump", "Biden", 100);
     println!("{}", res);// Donarld Trump
+}
+```
+
+## lifetime bound
+
+```rs
+fn main() {
+    let novel = String::from("Hello Trump. Hello Biden");
+    let first_setence = novel.split('.').next().expect("cannot find ."); // &str
+    let i = ImportantExcerpt {
+        part: first_setence,
+    };
+    i.announce_and_return_part("hello");
+}
+
+struct ImportantExcerpt<'a> {
+    part: &'a str, // part的lifetime长于结构体实例
+}
+
+impl<'a> ImportantExcerpt<'a> {
+    // 修改返回值的生命周期为'b，但是实际上其生命周期应该是'a
+    // 所以self.part要比返回值获得时间就，'a>'b
+    fn announce_and_return_part<'b>(&self, announcement: &'b str) -> &'b str
+    where
+        'a: 'b,
+    {
+        println!("Attention please: {}", announcement);
+        self.part
+    }
+}
+```
+
+因为`'a: 'b`表示`'a`生命周期大于`'b`，没有其他符号表示出`'a`生命周期小于`'b`, 而`<>`括号只表示声明，所以需要提前
+> 上一个例子更加合理
+
+```rs
+impl<'a: 'b, 'b> ImportantExcerpt<'a> {
+    fn announce_and_return_part(&self, announcement: &'b str) -> &'b str {
+        println!("Attention please: {}", announcement);
+        self.part
+    }
 }
 ```
