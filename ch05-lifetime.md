@@ -6,10 +6,12 @@
   - [lifetime with struct](#lifetime-with-struct)
   - [lifetime rules](#lifetime-rules)
     - [`'static` lifetime](#static-lifetime)
-  - [lifetime with generics](#lifetime-with-generics)
   - [lifetime bound](#lifetime-bound)
+  - [lifetime with generics](#lifetime-with-generics)
 
-生命周期: 让**引用**保持有效的作用域
+> **生命周期标注并不会改变任何引用的实际作用域**
+
+生命周期: **引用**保持有效的作用域
 > 生命周期目的是为了避免`dangling reference`
 - rust每个**引用**都有生命周期
 - 大多数生命周期都是隐式的，可被推断的
@@ -266,30 +268,6 @@ fn main() {
 静态生命周期，整个程序的持续时间
 > 比如字符串字面值, `let s1:&'static str="hello world";`
 
-## lifetime with generics
-
-生命周期也是泛型的一种，所以他们放到同一个`<>`里面
-
-```rs
-use std::fmt::Display;
-
-fn longest_with_announcement<'a, T: Display>(x: &'a str, y: &'a str, ann: T) -> &'a str {
-    println!("Announce, {}", ann);
-    if x.len() > y.len() {
-        x
-    } else {
-        y
-    }
-}
-
-fn main() {
-    let res = longest_with_announcement("Donarld Trump", "Biden", "info");
-    println!("{}", res);// Donarld Trump
-    let res = longest_with_announcement("Donarld Trump", "Biden", 100);
-    println!("{}", res);// Donarld Trump
-}
-```
-
 ## lifetime bound
 
 ```rs
@@ -320,13 +298,87 @@ impl<'a> ImportantExcerpt<'a> {
 ```
 
 因为`'a: 'b`表示`'a`生命周期大于`'b`，没有其他符号表示出`'a`生命周期小于`'b`, 而`<>`括号只表示声明，所以需要提前
-> 上一个例子更加合理
+> 上一个例子看起来更加直白明显
 
 ```rs
 impl<'a: 'b, 'b> ImportantExcerpt<'a> {
     fn announce_and_return_part(&self, announcement: &'b str) -> &'b str {
         println!("Attention please: {}", announcement);
         self.part
+    }
+}
+```
+
+## lifetime with generics
+
+生命周期也是泛型的一种，所以他们放到同一个`<>`里面
+
+```rs
+use std::fmt::Display;
+
+fn longest_with_announcement<'a, T: Display>(x: &'a str, y: &'a str, ann: T) -> &'a str {
+    println!("Announce, {}", ann);
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+
+fn main() {
+    let res = longest_with_announcement("Donarld Trump", "Biden", "info");
+    println!("{}", res);// Donarld Trump
+    let res = longest_with_announcement("Donarld Trump", "Biden", 100);
+    println!("{}", res);// Donarld Trump
+}
+```
+
+```rs
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+impl<T, U> Point<T, U> {
+    fn mixup<'a, 'b: 'a, V, W>(&'a self, other: &'b Point<V, W>) -> Point<&T, &W> {
+        Point {
+            x: &self.x,
+            y: &other.y,
+        }
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 10, y: 20.2 }; // <i32, f64>
+    let p2 = Point { x: "hello", y: 'c' }; // <&str, char>
+    let p3 = p1.mixup(&p2);
+    println!("{}-{}", p1.x, p1.y); // 10-20.2
+    println!("{}-{}", p2.x, p2.y); // hello-c
+    println!("{}-{}", p3.x, p3.y); // 10-c
+}
+```
+
+```rs
+impl<T, U> Point<T, U> {
+    fn mixup<'a, 'b, V, W>(&'a self, other: &'b Point<V, W>) -> Point<&T, &W>
+    where
+        'b: 'a,
+    {
+        Point {
+            x: &self.x,
+            y: &other.y,
+        }
+    }
+}
+```
+
+```rs
+impl<'a, T, U> Point<T, U> {
+    fn mixup<'b: 'a, V, W>(&'a self, other: &'b Point<V, W>) -> Point<&T, &W> {
+        Point {
+            x: &self.x,
+            y: &other.y,
+        }
     }
 }
 ```
