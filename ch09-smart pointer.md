@@ -10,6 +10,7 @@
     - [`Rc<T>` with `RefCell<T>`](#rct-with-refcellt)
   - [Memory Leak](#memory-leak)
     - [`Weak<T>`](#weakt)
+  - [Raw Pointer](#raw-pointer)
 
 ## introduction
 
@@ -759,3 +760,97 @@ fn main() {
     );
 }
 ```
+
+## Raw Pointer
+
+example: pointer size
+
+```rs
+use std::mem::size_of;
+
+static B: [u8; 10] = [99,97,114,114,121,116,111,119,101,108];
+static C: [u8; 11] = [116,104,97,110,107,115,102,105,115,104,0];
+
+fn main() {
+    let a = 42;
+    let b1 = &B;
+    let b2 = Box::new(B); // smart pointer
+    let c = &C;
+
+    println!("a : addr={:p},size={} bytes, value={}", &a, size_of::<i32>(), a);
+    println!("b1: addr={:p},size={} bytes, value={:p}", &b1, size_of::<&[u8;10]>(), b1);
+    println!("b2: addr={:p},size={} bytes, value={:p}", &b2, size_of::<Box<[u8]>>(), b2);
+    println!("c : addr={:p},size={} bytes, value={:p}", &c, size_of::<&[u8;11]>(), c);
+    println!("B : addr={:p},size={} bytes, value={:?}", &B, size_of::<[u8;10]>(), B);
+    println!("C : addr={:p},size={} bytes, value={:?}", &C, size_of::<[u8;11]>(), C);
+}
+```
+
+```bash
+# output, b2只能指向heap，所以不是static静态区的地址
+a : addr=0x7fffa568825c,size=4 bytes, value=42
+b1: addr=0x7fffa5688260,size=8 bytes, value=0x55b3c256504d
+b2: addr=0x7fffa5688268,size=16 bytes, value=0x55b3c2818ad0
+c : addr=0x7fffa5688280,size=8 bytes, value=0x55b3c2565057
+B : addr=0x55b3c256504d,size=10 bytes, value=[99, 97, 114, 114, 121, 116, 111, 119, 101, 108]
+C : addr=0x55b3c2565057,size=11 bytes, value=[116, 104, 97, 110, 107, 115, 102, 105, 115, 104, 0]
+```
+
+> Raw pointer is `unsafe`
+- 不可变raw pointer: `*const T`. e.g. `*const u8`, `*cosnt String`
+- 可变rawo pointer: `*mut T`
+- 两者可以相互转换
+- Rust编译过程会将`&T`和`&mut T`转换成raw pointer
+- Raw pointer不拥有值得所有权，即，编译器不会检查合法性
+- 允许多个Raw pointer指向同一个数据，编译器无法保证共享数据得合法性
+
+```rs
+fn main() {
+    let a: i64 = 42;
+    let a_ptr = &a as *const i64;
+    let a_addr:usize = unsafe { std::mem::transmute(a_ptr) };
+    // value=42, ptr=0x7ffe15cb0a48, 0x7ffe15cb0a48, addr=7ffe15cb0a4f
+    println!("value={}, ptr={:p}, {:p}, addr={:x}", a, &a, a_ptr, a_addr+7);
+}
+```
+
+```rs
+use std::borrow::Cow;
+use std::ffi::CStr; // 类似C语言的字符串，以0结尾
+use std::os::raw::c_char; // i8类型的alias
+
+static B: [u8; 10] = [99,97,114,114,121,116,111,119,101,108];
+static C: [u8; 11] = [116,104,97,110,107,115,102,105,115,104,0];
+
+fn main() {
+    let a = 42;
+    let b:String;
+    let c:Cow<str>;
+
+    unsafe{
+        let b_ptr=&B as *const u8 as *mut u8;
+        b=String::from_raw_parts(b_ptr, 10, 10);
+
+        let c_ptr=&C as *const u8 as *const c_char; // *const i8
+        c=CStr::from_ptr(c_ptr).to_string_lossy();
+    }
+
+    // a=42,b=carrytowel,c=thanksfish
+    println!("a={},b={},c={}", a, b, c);
+}
+```
+
+| 名称          | 简介| 强项 | 弱项 |
+|-----|-----|-----|-----|
+|`Raw Pointer` | `*const T`,`*mut T`| 速度、与外界交互 | unsafe|
+|`Box<T>`      | 最常用的智能指针| 将值集中储存在Heap | 大小增加  |
+|`Rc<T>`       | 值的共享访问 | 对值的共享访问 | 大小增加；运行时成本；线程不安全   |
+|`Arc<T>`      | 可以跨线程共享值  | 对值的共享访问；线程安全 | 大小增加；运行时成本；|
+|`Cell<T> `    | 具有改变不可变值的能力 | 内部可变性  | 大小增加；性能    |
+|`RefCell<T>`  | 对不可变引用执行改变，但有代价    | 内部可变性；可与仅接受不可变引用的Rc,Arc嵌套使用 | 大小增加；运行时成本；缺乏编译时保障 |
+|`Cow<T>`      | Clone on Write,封闭并提供对借用数据的不可变访问，并在需要修改或所有权的时候，延迟克隆数据 | 只读访问避免写入| 大小可能增加|
+|`String`      | 可处理可变长度的文本 | 动态按需增长；保证正确编码  | 过度分配内存大小   |
+|`Vec<T>`      | 程序最常用的存储系统；创建和销毁值时保持数据有序 | 动态按需增长 | 过度分配内存大小   |
+|`RawVec<T>`   | 是`Vec<T>`和其他动态大小类型的基石 | 动态按需增长 | 不直接使用 |
+|`Unique<T>`   | 作为值的唯一使用者，保证拥有完全的控制权 | 需要独占值的类型 | 不直接使用 |
+|`Shared<T>`   | 分享所有权 | 共享所有权，可以将内存与T的宽度对齐  | 不直接使用 |
