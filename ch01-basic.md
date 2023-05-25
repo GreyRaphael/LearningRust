@@ -731,6 +731,28 @@ fn take_and_giveback(mut str1:String)->String {
 
 ### reference
 
+example: `mut` with ownership
+
+```rs
+fn main() {
+    let x1 = 32;
+    let x2 = 400;
+    let x3=1000;
+    
+    // y可以改变自身的值,因为mut y，但是无法改变x1的值，因为不是&mut x1
+    let mut y = &x1;
+    println!("{}",y); // 32
+    y = &x2;
+    println!("{}",y); // 400
+
+    // z无法改变自身的值，因为不是mut，但是可以改变y的值，因为是&mut y
+    let z = &mut y;
+    *z=&x3;
+    println!("{}", y); // 1000
+    println!("{}", z);
+}
+```
+
 使用完s1，s1的所有权发生转移
 
 ```rs
