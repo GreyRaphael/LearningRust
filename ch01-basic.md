@@ -748,8 +748,8 @@ fn main() {
     // z无法改变自身的值，因为不是mut，但是可以改变y的值，因为是&mut y
     let z = &mut y;
     *z=&x3;
-    println!("{}", y); // 1000
-    println!("{}", z);
+    // println!("{}", y); // cannot borrow as immutable because it is borrowed as mutable
+    println!("{}", z); // 1000
 }
 ```
 
