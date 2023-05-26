@@ -1307,6 +1307,7 @@ fn main() {
 ```
 
 通过传播错误的符号`?`来返回错误
+- the `?` operator can only be used in a function that returns `Result` or `Option`
 - 如果`?`前面的值是Ok, 那么就作为表达式的值，然后继续执行程序
 - 如果`?`前面的值是Err, 那么Err就作为这个函数的`return`返回值
 - `std::convert::From`上的`from`函数用于不同错误之间的转换。`?`的错误会隐式地被`from`函数进行转换为整个函数返回的Err类型
