@@ -7,6 +7,7 @@
   - [Iterator](#iterator)
     - [custom iterator](#custom-iterator)
     - [modify `minigrep` with iterator](#modify-minigrep-with-iterator)
+    - [Iterator as function argument](#iterator-as-function-argument)
 
 闭包: 可以捕获其所在环境的匿名函数
 - 匿名函数
@@ -442,5 +443,47 @@ pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a st
         .lines()
         .filter(|line| line.to_lowercase().contains(&query))
         .collect()
+}
+```
+
+### Iterator as function argument
+
+```rs
+fn iter1<'a>(numbers: impl Iterator<Item = &'a i32>) {
+    for n in numbers {
+        println!("{},", n);
+    }
+}
+
+fn iter2(numbers: impl Iterator<Item = i32>) {
+    for n in numbers {
+        println!("{},", n);
+    }
+}
+
+// iter3和iter2等效
+fn iter3<T>(numbers: T)
+where
+    T: Iterator<Item = i32>,
+{
+    for n in numbers {
+        println!("{},", n * 100);
+    }
+}
+
+fn main() {
+    // Range as Iter
+    let range1 = 0..5;
+    // iter1(range1.into_iter()); // expect &i32
+    iter2(range1.into_iter()); // expect &i32
+    // iter3(range1.into_iter()); // use of moved value: range1
+
+    let range2 = 10..15;
+    iter3(range2.into_iter());
+
+    // Vector as Iter
+    let numbers: Vec<i32> = vec![1, 2, 3, 4, 5, 6];
+    iter1(numbers.iter()); // iter() element is &i32,后文能够使用numbers
+    iter3(numbers.into_iter()); // into_iter之后，无法在后文使用numbers
 }
 ```
