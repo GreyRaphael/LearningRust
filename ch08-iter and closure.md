@@ -457,6 +457,8 @@ fn main() {
 // lib.rs
 impl Config {
     // 因为错误信息是字符串字面值，所以用'static
+    // 也可以使用了特征约束的方式来约束args
+    // pub fn new(mut args: impl Iterator<Item=String>) -> Result<Config, &'static str>
     pub fn new(mut args: env::Args) -> Result<Config, &'static str> {
         if args.len() < 3 {
             return Err("not enough arguments");
