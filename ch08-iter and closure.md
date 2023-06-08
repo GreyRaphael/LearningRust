@@ -242,17 +242,47 @@ simple example
 
 ```rs
 fn main() {
-    let v1 = vec![1, 2, 3, 4];
-    for item in v1 {
-        // i32
-        println!("{}", item);
-    }
-
-    let v2 = vec![11, 22, 33, 44];
-    let it2 = v2.iter();
-    for item in it2 {
+    let v1 = vec![1, 2, 3, 4, 5, 6];
+    let iter1 = v1.iter();
+    for i in iter1 {
         // &i32
-        println!("{}", item);
+        print!("{},", i);
+    }
+    // vec实现了IntoIterator trait
+    for i in v1 {
+        // i32
+        print!("{},", i);
+    }
+    println!("");
+
+    let v2 = vec![11, 22, 33];
+    let iter21 = v2.into_iter();
+    for i in iter21 {
+        // i32
+        print!("{},", i);
+    }
+    println!("");
+
+    let mut v3 = vec![100, 200, 300];
+    let iter31 = v3.iter_mut();
+    for i in iter31 {
+        // &mut i32
+        *i = *i - 10;
+    }
+    for i in v3 {
+        // i32
+        print!("{},", i);
+    }
+    println!("");
+}
+```
+
+```rs
+fn main() {
+    let range1 = 0..5; // Range<i32>
+    // Range实现IntoIterator trait
+    for i in range1 {
+        print!("{},", i)
     }
 }
 ```
@@ -260,14 +290,36 @@ fn main() {
 ```rs
 fn main() {
     let v1 = vec![1, 2, 3];
-    let mut it1 = v1.iter(); //  必须是mut，因为消耗迭代器，内部发生了改变, 上面的for是因为取得了所有权
+    let mut it1 = v1.iter(); //  手动迭代必须将迭代器声明为 mut 可变，因为调用 next 会改变迭代器其中的状态数据（当前遍历的位置等），而 for 循环去迭代则无需标注 mut，因为它会帮我们自动完成
 
     assert_eq!(it1.next(), Some(&1));
     assert_eq!(it1.next(), Some(&2));
     assert_eq!(it1.next(), Some(&3));
     assert_eq!(it1.next(), None);
 }
-``` 
+```
+
+example: 模拟for循环
+
+```rs
+fn main() {
+    let values = vec![1, 2, 3];
+
+    {
+        let result = match IntoIterator::into_iter(values) {
+            mut iter => loop {
+                match iter.next() {
+                    Some(x) => {
+                        println!("{}", x);
+                    }
+                    None => break,
+                }
+            },
+        };
+        result
+    }
+}
+```
 
 summary：
 - `iter`: 迭代不可变引用
