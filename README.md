@@ -18,6 +18,18 @@
 ## Preparation
 
 ```bash
+# recommended
+curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh
+rustc --version
+cargo --version
+
+# update rust
+rustup update
+
+# install vscode extension: rust-analyzer
+```
+
+```bash
 sudo apt update
 sudo apt install rustc
 sudo apt install cargo
