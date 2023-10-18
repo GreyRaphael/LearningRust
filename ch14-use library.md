@@ -6,6 +6,7 @@
     - [Rust Use C++ Static Library](#rust-use-c-static-library)
     - [Rust Build \& Use C++ Static Library](#rust-build--use-c-static-library)
     - [C++ Use Rust Shared Library](#c-use-rust-shared-library)
+    - [C++ Use Rust Static Library](#c-use-rust-static-library)
 
 ## Rust and C++ Interoperability
 
@@ -344,6 +345,89 @@ target_link_libraries(proj2 PRIVATE ${CMAKE_SOURCE_DIR}/rust-lib/libmyadd.so)
 ```
 
 ```cpp
+// proj2/main.cpp
+#include <iostream>
+
+#include "myadd.h"
+
+int main(int, char**) {
+    auto result = rust_function(100, 200);
+    std::cout << result << '\n';
+}
+```
+
+### C++ Use Rust Static Library
+
+step1: rust buld a static library
+1. `cargo new rust-lib --lib`
+2. write rust functions
+
+```bash
+rust-lib
+  ├── Cargo.toml
+  └── src
+      └── lib.rs
+```
+
+```toml
+# rust-lib/Cargo.toml
+[package]
+name = "rust-libs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "myadd"
+# crate-type = ["cdylib"] # Creates dynamic lib
+crate-type = ["staticlib"] # Creates static lib
+```
+
+```rust
+// rust-lib/src/lib.rs, not changed
+#[no_mangle]
+pub extern "C" fn rust_function(x: i32, y: i32) -> i32 {
+    println!("Hello from Rust, result = {}", x + y);
+    x + y
+}
+```
+
+step2: cpp use rust shared library
+1. create a cmake project
+2. write header file for rust static library
+3. config `CMakeLists.txt`
+4. invoke rust functions
+
+```bash
+proj2
+  ├── CMakeLists.txt
+  ├── main.cpp
+  └── rust-lib
+      ├── libmyadd.so
+      └── myadd.h
+```
+
+```h
+// proj2/rust-lib/myadd.h, unchanged
+extern "C" {
+
+int rust_function(int x, int y);
+
+}
+```
+
+```cmake
+# proj2/CMakeLists.txt
+cmake_minimum_required(VERSION 3.24.0)
+project(proj2 VERSION 0.1.0 LANGUAGES C CXX)
+
+add_executable(proj2 main.cpp)
+
+target_include_directories(proj2 PRIVATE ${CMAKE_SOURCE_DIR}/rust-lib)
+target_link_libraries(proj2 PRIVATE ${CMAKE_SOURCE_DIR}/rust-lib/libmyadd.a)
+```
+
+```cpp
+// proj2/main.cpp, unchanged
 #include <iostream>
 
 #include "myadd.h"
