@@ -4,6 +4,7 @@
   - [Rust and C++ Interoperability](#rust-and-c-interoperability)
     - [Rust Use C++ Shared Library](#rust-use-c-shared-library)
     - [Rust Use C++ Static Library](#rust-use-c-static-library)
+    - [Rust Build \& Use C++ Static Library](#rust-build--use-c-static-library)
 
 ## Rust and C++ Interoperability
 
@@ -193,4 +194,79 @@ edition = "2021"
 
 [dependencies]
 libc = "0.2.149"
+```
+
+### Rust Build & Use C++ Static Library
+
+Steps
+1. `cargo new proj1`
+2. create a `mylib.cpp` in `proj1/src-cpp/`
+3. create a `build.rs` in `proj1/`
+4. create a `c_wrapper.rs` in `proj1/src/`
+
+```bash
+proj1
+  ├── build.rs
+  ├── Cargo.toml
+  ├── src
+  │   ├── c_wrapper.rs
+  │   └── main.rs
+  └── src-cpp
+      └── mylib.cpp
+```
+
+```toml
+# proj1/Cargo.toml
+[package]
+name = "proj1"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libc = "0.2.149"
+
+[build-dependencies]
+cc = "1.0"
+```
+
+```rust
+// proj1/build.rs
+use cc;
+
+fn main() {
+    cc::Build::new().file("src-cpp/mylib.cpp").compile("mylib");
+}
+```
+
+```rust
+// proj1/src/c_wrapper.rs, can only be static
+#[link(name = "mylib")]
+extern "C" {
+    fn add_numbers(x: i32, y: i32) -> i32;
+}
+
+pub fn add_numbers_rust(x: i32, y: i32) {
+    let result = unsafe { add_numbers(x, y) };
+    println!("x={}, y={}, result={}", x, y, result);
+}
+```
+
+```rust
+// proj1/src/main.rs, not changed
+mod c_wrapper;
+
+fn main() {
+    c_wrapper::add_numbers_rust(30, 20);
+}
+```
+
+```cpp
+// src-cpp/mylib.cpp, hot changed
+extern "C" {
+int add_numbers(int x, int y);
+}
+
+int add_numbers(int x, int y) {
+    return x + y;
+}
 ```
