@@ -5,6 +5,7 @@
     - [Rust Use C++ Shared Library](#rust-use-c-shared-library)
     - [Rust Use C++ Static Library](#rust-use-c-static-library)
     - [Rust Build \& Use C++ Static Library](#rust-build--use-c-static-library)
+    - [C++ Use Rust Shared Library](#c-use-rust-shared-library)
 
 ## Rust and C++ Interoperability
 
@@ -268,5 +269,87 @@ int add_numbers(int x, int y);
 
 int add_numbers(int x, int y) {
     return x + y;
+}
+```
+
+### C++ Use Rust Shared Library
+
+> Tutorial: [A little Rust with your C](https://docs.rust-embedded.org/book/interoperability/rust-with-c.html)
+
+step1: rust buld a shared library
+1. `cargo new rust-lib --lib`
+2. write rust functions
+
+```bash
+rust-lib
+  ├── Cargo.toml
+  └── src
+      └── lib.rs
+```
+
+```toml
+# rust-lib/Cargo.toml
+[package]
+name = "rust-lib"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "myadd"
+crate-type = ["cdylib"] # Creates dynamic lib
+```
+
+```rust
+// rust-lib/src/lib.rs
+#[no_mangle]
+pub extern "C" fn rust_function(x: i32, y: i32) -> i32 {
+    println!("Hello from Rust, result = {}", x + y);
+    x + y
+}
+```
+
+step2: cpp use rust shared library
+1. create a cmake project
+2. write header file for rust shared library. There is a tool to automate this process, called [cbindgen](https://github.com/mozilla/cbindgen) which analyses your Rust code and then generates headers for your C and C++ projects from it, `cbindgen --config cbindgen.toml --crate rust-libs --output myadd.h`, where `cbindgen.toml` is empty file
+3. config `CMakeLists.txt`
+4. invoke rust functions
+
+```bash
+proj2
+  ├── CMakeLists.txt
+  ├── main.cpp
+  └── rust-lib
+      ├── libmyadd.so
+      └── myadd.h
+```
+
+```h
+// proj2/rust-lib/myadd.h
+extern "C" {
+
+int rust_function(int x, int y);
+
+}
+```
+
+```cmake
+# proj2/CMakeLists.txt
+cmake_minimum_required(VERSION 3.24.0)
+project(proj2 VERSION 0.1.0 LANGUAGES C CXX)
+
+add_executable(proj2 main.cpp)
+
+target_include_directories(proj2 PRIVATE ${CMAKE_SOURCE_DIR}/rust-lib)
+target_link_libraries(proj2 PRIVATE ${CMAKE_SOURCE_DIR}/rust-lib/libmyadd.so)
+```
+
+```cpp
+#include <iostream>
+
+#include "myadd.h"
+
+int main(int, char**) {
+    auto result = rust_function(100, 200);
+    std::cout << result << '\n';
 }
 ```
