@@ -8,6 +8,8 @@
     - [`'static` lifetime](#static-lifetime)
   - [lifetime bound](#lifetime-bound)
   - [lifetime with generics](#lifetime-with-generics)
+  - [advanced](#advanced)
+    - [`&'static` vs `T:'static`](#static-vs-tstatic)
 
 > **生命周期标注并不会改变任何引用的实际作用域**
 
@@ -381,4 +383,63 @@ impl<'a, T, U> Point<T, U> {
         }
     }
 }
+```
+
+## advanced
+
+### `&'static` vs `T:'static`
+
+simple compare
+- `&'static` 对于生命周期有着非常强的要求：一个引用必须要活得跟剩下的程序一样久，才能被标注为 `&'static`
+
+```rs
+use std::fmt::Display;
+
+fn main() {
+    let mark_twain = "Samuel Clemens";
+    print_author1(mark_twain);
+    print_author2(mark_twain);
+    // print_author2(&mark_twain); // error, &&str is not static
+    print_author3(mark_twain);
+    print_author3(&mark_twain);
+    // print_author4(mark_twain); // error, str is not static
+    print_author4(&mark_twain);
+}
+
+fn print_author1(author: &'static str) {
+    println!(
+        "print_author1 passed-in 'static value is: {}, of type &str",
+        author
+    );
+}
+
+fn print_author2<T: Display + 'static>(message: T) {
+    println!(
+        "print_author2 passed-in 'static value is: {}, of type {:?}",
+        message,
+        std::any::type_name::<T>()
+    );
+}
+
+fn print_author3<T: Display>(message: T) {
+    println!(
+        "print_author3 passed-in 'static value is: {}, of type {:?}",
+        message,
+        std::any::type_name::<T>()
+    );
+}
+
+fn print_author4<T: Display + 'static>(message: &T) {
+    println!(
+        "print_author4 passed-in 'static value is: {}, of type {:?}",
+        message,
+        std::any::type_name::<T>()
+    );
+}
+
+// print_author1 passed-in 'static value is: Samuel Clemens, of type &str
+// print_author2 passed-in 'static value is: Samuel Clemens, of type "&str"
+// print_author3 passed-in 'static value is: Samuel Clemens, of type "&str"
+// print_author3 passed-in 'static value is: Samuel Clemens, of type "&&str"
+// print_author4 passed-in 'static value is: Samuel Clemens, of type "&str"
 ```
