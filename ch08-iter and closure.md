@@ -9,13 +9,24 @@
     - [modify `minigrep` with iterator](#modify-minigrep-with-iterator)
     - [Iterator as function argument](#iterator-as-function-argument)
 
+## Closure
+
 闭包: 可以捕获其所在环境的匿名函数
 - 匿名函数
 - 保存为变量或者参数，传递给另一个函数，或者作为返回值
 - 在某一个地方创建闭包，在另一个上下文中调用闭包来完成计算
 - 可以从其定义的作用域内捕获值
 
-## Closure
+simple closure example:
+
+```rs
+fn main() {
+   let x = 1;
+   let sum = |y| x + y; // sum is closure
+
+    assert_eq!(3, sum(2));
+}
+```
 
 - 闭包不要求标注参数和返回值的类型
 - 闭包的上下文比较狭小，通常编译器都能推断出类型
