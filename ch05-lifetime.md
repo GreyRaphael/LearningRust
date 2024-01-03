@@ -11,6 +11,7 @@
   - [advanced](#advanced)
     - [`&'static` vs `T:'static`](#static-vs-tstatic)
     - [Non-Lexical Lifetime(NLL)](#non-lexical-lifetimenll)
+    - [Reborrow](#reborrow)
 
 > **生命周期标注并不会改变任何引用的实际作用域**
 
@@ -597,3 +598,33 @@ fn main() {
 - 好在，该规则从 1.31 版本引入 NLL 后，就变成了：引用的生命周期从借用处开始，一直持续到最后一次使用的地方。
 - 按照最新的规则，我们再来分析一下上面的代码。r1 和 r2 不可变借用在 println! 后就不再使用，因此生命周期也随之结束，那么 r3 的借用就不再违反借用的规则
 
+### Reborrow
+
+```rs
+#[derive(Debug)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl Point {
+    fn move_to(&mut self, x: i32, y: i32) {
+        self.x = x;
+        self.y = y;
+    }
+}
+
+fn main() {
+    let mut p = Point { x: 0, y: 0 };
+    let r = &mut p;
+    // reborrow! 此时对`r`的再借用不会导致跟上面的借用冲突
+    let rr: &Point = &*r;
+
+    // 再借用`rr`最后一次使用发生在这里，在它的生命周期中，我们并没有使用原来的借用`r`，因此不会报错
+    println!("{:?}", rr);
+
+    // 再借用结束后，才去使用原来的借用`r`
+    r.move_to(10, 10);
+    println!("{:?}", r);
+}
+```
