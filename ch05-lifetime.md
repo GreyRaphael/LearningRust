@@ -10,6 +10,7 @@
   - [lifetime with generics](#lifetime-with-generics)
   - [advanced](#advanced)
     - [`&'static` vs `T:'static`](#static-vs-tstatic)
+    - [Non-Lexical Lifetime(NLL)](#non-lexical-lifetimenll)
 
 > **生命周期标注并不会改变任何引用的实际作用域**
 
@@ -575,3 +576,24 @@ fn main() {
     print_it22(&i);// 约束的是T,但是使用的是&T,编译器不检查T
 }
 ```
+
+### Non-Lexical Lifetime(NLL)
+
+```rs
+fn main() {
+   let mut s = String::from("hello");
+
+    let r1 = &s;
+    let r2 = &s;
+    println!("{} and {}", r1, r2);
+    // 新编译器中，r1,r2作用域在这里结束
+
+    let r3 = &mut s;
+    println!("{}", r3);
+}
+```
+
+- 因为 r1 和 r2 的不可变引用将持续到 main 函数结束，而在此范围内，我们又借用了 r3 的可变引用，这违反了借用的规则：**要么多个不可变借用，要么一个可变借用。**
+- 好在，该规则从 1.31 版本引入 NLL 后，就变成了：引用的生命周期从借用处开始，一直持续到最后一次使用的地方。
+- 按照最新的规则，我们再来分析一下上面的代码。r1 和 r2 不可变借用在 println! 后就不再使用，因此生命周期也随之结束，那么 r3 的借用就不再违反借用的规则
+
