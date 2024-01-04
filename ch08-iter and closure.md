@@ -220,7 +220,7 @@ fn main() {
 ```
 
 闭包捕获变量有三种途径，恰好对应函数参数的三种传入方式：转移所有权、可变借用、不可变借用，因此相应的 Fn 特征也有三种：
-> 所有实现`Fn`的都实现了`FnMut`，所有实现了`FnMut`的都实现了`FnOnce`: ``FnOnce > FnMut > Fn`
+> 所有实现`Fn`的都实现了`FnMut`，所有实现了`FnMut`的都实现了`FnOnce`: `FnOnce > FnMut > Fn`
 - 取得所有权: `FnOnce`, applies to closures that can be called once. **All closures implement at least this trait**, because all closures can be called. A closure that moves captured values out of its body will only implement FnOnce and none of the other Fn traits, because it can only be called once.
 - 可变借用: `FnMut`，applies to closures that don’t move captured values out of their body, but that might mutate the captured values. These closures can be called more than once.
 - 不可变借用: `Fn`，applies to closures that don’t move captured values out of their body and that don’t mutate captured values, as well as closures that capture nothing from their environment. These closures can be called more than once without mutating their environment, which is important in cases such as calling a closure multiple times concurrently.
@@ -348,28 +348,33 @@ example: comparison
 ```rs
 fn main() {
     let s = String::from("hello");
-    let update_string = || println!("{}", s);
+    let update_string = || println!("{}", s); // impl Fn()
 
     // 取得的是s的不可变引用，所以是能Copy的
     exec(update_string);
     exec(update_string);
 }
 
+// fn exec<F: Fn()>(f: F) // 也可以是Fn
+// fn exec<F: FnOnce()>(f: F) // 也可以是FnOnce，但是内部的f只能调用1次
 fn exec<F: FnMut()>(mut f: F) {
     f();
 }
-
 ```
+
+> **一个闭包实现了哪种 Fn 特征取决于该闭包如何使用被捕获的变量，而不是取决于闭包如何捕获它们。** 使用了不可变引用，就是`impl Fn()`, 使用了可变引用就是`impl FnMut()`, `move`并不改变Fn特征类型，只是表明闭包以`move`的方式捕获了变量。
 
 ```rs
 fn main() {
     let s = String::from("hello");
-    let update_string = move || println!("{}", s); // move
+    let update_string = move || println!("{}", s); // move, impl Fn()
 
     exec(update_string);
     // exec(update_string); // update_string moved，所以不是Copy
 }
 
+// fn exec<F: Fn()>(f: F) // 也可以是Fn
+// fn exec<F: FnOnce()>(f: F) // 也可以是FnOnce，但是内部的f只能调用1次
 fn exec<F: FnMut()>(mut f: F) {
     f();
 }
@@ -378,7 +383,7 @@ fn exec<F: FnMut()>(mut f: F) {
 ```rs
 fn main() {
     let mut s = String::new();
-    let mut update_string = || s.push_str("hello");
+    let mut update_string = || s.push_str("hello"); // impl FnMut()
 
     exec(update_string);
     // exec(update_string); // 因为是可变引用mut s，所以不是Copy
@@ -386,6 +391,8 @@ fn main() {
     println!("{}", s);
 }
 
+// fn exec<F: Fn()>(f: F) {// 不能是Fn, 因为update_string类型推断是FnMut，根据FnOnce>FnMut>Fn, 只能选择FnMut, FnOnce
+// fn exec<F: FnOnce()>(f: F) {// 也可以是FnOnce，但是内部的f只能调用1次
 fn exec<F: FnMut()>(mut f: F) {
     f();
 }
@@ -402,6 +409,8 @@ fn main() {
     println!("{}", s);
 }
 
+// fn exec<F: Fn()>(f: F) {// 不能是Fn, 因为update_string类型推断是FnMut，根据FnOnce>FnMut>Fn, 只能选择FnMut, FnOnce
+// fn exec<F: FnOnce()>(f: F) {// 也可以是FnOnce，但是内部的f只能调用1次
 fn exec<F: FnMut()>(mut f: F) {
     f();
 }
@@ -442,6 +451,76 @@ fn main() {
 
 fn exec<F: Fn(String) -> ()>(f: F) {
     f("world".to_string())
+}
+```
+
+example: 三种Fn特征的关系
+
+从特征约束能看出来 Fn 的前提是实现 FnMut，FnMut 的前提是实现 FnOnce，因此要实现 Fn 就要同时实现 FnMut 和 FnOnce
+> Fn 获取 `&self`，FnMut 获取 `&mut self`，而 FnOnce 获取 `self`。 在实际项目中，建议先使用 Fn 特征
+
+```rs
+pub trait Fn<Args>: FnMut<Args> {
+    extern "rust-call" fn call(&self, args: Args) -> Self::Output;
+}
+
+pub trait FnMut<Args>: FnOnce<Args> {
+    extern "rust-call" fn call_mut(&mut self, args: Args) -> Self::Output;
+}
+
+pub trait FnOnce<Args> {
+    type Output;
+
+    extern "rust-call" fn call_once(self, args: Args) -> Self::Output;
+}
+```
+
+实际上，一个闭包并不仅仅实现某一种 Fn 特征，规则如下：
+1. 所有的闭包都自动实现了 FnOnce 特征，因此任何一个闭包都至少可以被调用一次
+1. 没有移出所捕获变量的所有权的闭包自动实现了 FnMut 特征
+1. 不需要对捕获变量进行改变的闭包自动实现了 Fn 特征
+
+```rs
+fn main() {
+    let s = String::from("hello");
+
+    let update_string = || println!("{}", s);
+
+    exec(update_string);
+    exec1(update_string);
+    exec2(update_string);
+}
+
+fn exec<F: FnOnce()>(f: F) {
+    f()
+}
+
+fn exec1<F: FnMut()>(mut f: F) {
+    f()
+}
+
+fn exec2<F: Fn()>(f: F) {
+    f()
+}
+```
+
+关于规则2，有如下例子
+
+```rs
+fn main() {
+    let mut s = String::new();
+
+    let update_string = |seg| -> String {
+        s.push_str(seg);
+        s // 因为这里移出所捕获变量的所有权，所以是FnOnce
+    }; // impl FnOnce(&str)->String
+
+    exec(update_string);
+}
+
+fn exec<'a, F: FnOnce(&'a str) -> String>(f: F) {
+    let v = f("hello");
+    println!("{}", v)
 }
 ```
 
