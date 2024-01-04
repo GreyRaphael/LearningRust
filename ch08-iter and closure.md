@@ -220,7 +220,7 @@ fn main() {
 ```
 
 闭包捕获变量有三种途径，恰好对应函数参数的三种传入方式：转移所有权、可变借用、不可变借用，因此相应的 Fn 特征也有三种：
-> 所有实现`Fn`的都实现了`FnMut`，所有实现了`FnMut`的都实现了`FnOnce`
+> 所有实现`Fn`的都实现了`FnMut`，所有实现了`FnMut`的都实现了`FnOnce`: ``FnOnce > FnMut > Fn`
 - 取得所有权: `FnOnce`, applies to closures that can be called once. **All closures implement at least this trait**, because all closures can be called. A closure that moves captured values out of its body will only implement FnOnce and none of the other Fn traits, because it can only be called once.
 - 可变借用: `FnMut`，applies to closures that don’t move captured values out of their body, but that might mutate the captured values. These closures can be called more than once.
 - 不可变借用: `Fn`，applies to closures that don’t move captured values out of their body and that don’t mutate captured values, as well as closures that capture nothing from their environment. These closures can be called more than once without mutating their environment, which is important in cases such as calling a closure multiple times concurrently.
@@ -336,6 +336,7 @@ fn main() {
     println!("{:?}", x); // [11, 22]
 }
 
+// f使用mut修饰
 fn exec<F: FnMut(usize)>(mut f: F) {
     f(11);
     f(22);
@@ -363,7 +364,7 @@ fn exec<F: FnMut()>(mut f: F) {
 ```rs
 fn main() {
     let s = String::from("hello");
-    let update_string = move || println!("{}", s);
+    let update_string = move || println!("{}", s); // move
 
     exec(update_string);
     // exec(update_string); // update_string moved，所以不是Copy
@@ -409,11 +410,31 @@ fn exec<F: FnMut()>(mut f: F) {
 example: `Fn`
 
 ```rs
+use std::usize;
+
+fn main() {
+    let mut x = Vec::new();
+
+    let update_vec = |value| x.push(value); // imple FnMut(usize)
+
+    exec(update_vec); // error, update_vec因为捕获的是可变引用，所以是FnMut，无法传递给Fn
+
+    println!("{:?}", x);
+}
+
+fn exec<F: Fn(usize)>(mut f: F) {
+    f(10);
+    f(20);
+}
+```
+
+```rs
 fn main() {
     let s = "hello".to_string();
 
     let update_string = |ss| println!("{},{}", s, ss);
 
+    exec(update_string);
     exec(update_string);
 
     println!("{:?}", s);
