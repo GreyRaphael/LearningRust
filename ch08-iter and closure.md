@@ -226,24 +226,24 @@ fn main() {
 - 不可变借用: `Fn`，applies to closures that don’t move captured values out of their body and that don’t mutate captured values, as well as closures that capture nothing from their environment. These closures can be called more than once without mutating their environment, which is important in cases such as calling a closure multiple times concurrently.
 
 example: `FnOnce`
-> 闭包会拿走被捕获变量的所有权, 该闭包只能运行Once
+> 闭包会拿走被捕获变量的所有权, 所以闭包只能运行Once
 
 ```rs
 fn fn_once<F>(f_inner: F)
 where
     F: FnOnce(usize) -> bool,
 {
-    println!("{}", f_inner(100));
-    // println!("{}", f_inner(101)); // f_inner转移所有权，内部第二次调用，直接报错
+    println!("{}", f_inner(3));
+    println!("{}", f_inner(4)); // f_inner转移所有权，内部第二次调用，直接报错
 }
 
 fn main() {
-    let x = 100;
-    let f_outer = |z| z > x; // f_outer: impl Fn(usize)->bool
+    let x = vec![1, 2, 3];
+    let f_outer = |z| z == x.len(); // f_outer: impl Fn(usize)->bool
     fn_once(f_outer);
 
-    println!("{}", f_outer(110)); // 因为f是Fn,所以可以再次调用
-    println!("{}", f_outer(90));
+    println!("{}", f_outer(3)); // 因为f是Fn,所以可以再次调用
+    println!("{}", f_outer(5));
 }
 ```
 
@@ -252,23 +252,44 @@ fn fn_once<F>(f_inner: F)
 where
     F: FnOnce(usize) -> bool + Copy, // 增加Copy trait
 {
-    println!("{}", f_inner(100));
-    println!("{}", f_inner(101)); // 因为Copy trait调用时使用的将是它的拷贝，所以并没有发生所有权的转移, 正常运行
+    println!("{}", f_inner(3));
+    println!("{}", f_inner(4)); // 因为Copy trait调用时使用的将是它的拷贝，所以并没有发生所有权的转移, 正常运行
 }
 
 fn main() {
-    let x = 100;
-    let f_outer = |z| z > x; // f_outer: impl Fn(usize)->bool
+    let x = vec![1, 2, 3];
+    let f_outer = |z| z == x.len(); // f_outer: impl Fn(usize)->bool
     fn_once(f_outer);
 
-    println!("{}", f_outer(110)); // 因为f是Fn,所以可以再次调用
-    println!("{}", f_outer(90));
+    println!("{}", f_outer(3)); // 因为f是Fn,所以可以再次调用
+    println!("{}", f_outer(5));
 }
 ```
 
-example: `move`, 本质是`impl Fn()`
+example: `move`
 > 闭包在参数列表前使用`move`关键字，可以强制取得它在所使用环境的控制权
-- 当讲闭包传递给新线程，以移动数据使其归新线程所有，最为有用
+
+
+```rs
+fn fn_once<F>(f_inner: F)
+where
+    F: FnOnce(usize) -> bool,
+{
+    println!("{}", f_inner(3));
+    println!("{}", f_inner(4)); // f_inner转移所有权，内部第二次调用，直接报错
+}
+
+fn main() {
+    let x = vec![1, 2, 3];
+    let f_outer = move |z| z == x.len(); // move强制取得所有权
+    fn_once(f_outer);
+
+    // println!("{}", f_outer(3)); // 因为move强制取得x的所有权，所以下面都无法调用
+    // println!("{}", f_outer(5));
+}
+```
+
+example: 当将闭包传递给新线程，以移动数据使其归新线程所有，`move`最为有用
 
 ```rs
 use std::thread;
@@ -288,37 +309,36 @@ example: `FnMut` by `mut`
 
 ```rs
 fn main() {
-    let mut s = String::new();
-
+    let mut x = Vec::new();
+    
     // FnMut需要用mut来修饰
-    let mut update_string = |str| s.push_str(str);
-    update_string("hello");
-    update_string("world");
+    let mut update_vec = |value| x.push(value); // update_vec: impl FnMut(i32)
+    update_vec(10);
+    update_vec(20);
 
-    println!("{:?}", s);
+    println!("{:?}", x); // [10, 20]
 }
 ```
 
 example: `FnMut` by trait
-> `update_string`闭包的所有权被移交给了exec函数。这说明`update_string`没有实现Copy特征，但并不是所有闭包都没有实现Copy特征，闭包自动实现Copy特征的规则是，只要闭包捕获的类型都实现了Copy特征的话，这个闭包就会默认实现Copy特征。
+> `update_vec`闭包的所有权被移交给了exec函数。这说明`update_vec`没有实现Copy特征，但并不是所有闭包都没有实现Copy特征，闭包自动实现Copy特征的规则是，只要闭包捕获的类型都实现了Copy特征的话，这个闭包就会默认实现Copy特征。
 
 ```rs
 fn main() {
-    let mut s = String::new();
+    let mut x = Vec::new();
 
-    // 没有mut修饰update_string
-    let update_string = |str| s.push_str(str);
-    // let update_string: impl FnMut(&str) =  |str| s.push_str(str); // by rust-analyzer
+    // 没有mut修饰
+    let update_vec = |value| x.push(value);
 
-    exec(update_string);
-    // exec(update_string); // update_string has been moved
+    exec(update_vec);
+    // exec(update_vec); // update_vec moved
 
-    println!("{:?}", s);
+    println!("{:?}", x); // [11, 22]
 }
 
-fn exec<'a, F: FnMut(&'a str)>(mut f: F) {
-    f("hello");
-    f("world");
+fn exec<F: FnMut(usize)>(mut f: F) {
+    f(11);
+    f(22);
 }
 ```
 
