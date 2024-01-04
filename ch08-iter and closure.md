@@ -219,7 +219,7 @@ fn main() {
 }
 ```
 
-与函数获取参数的方式一样, 创建闭包时，Rust会推断出具体使用下面的哪种闭包
+闭包捕获变量有三种途径，恰好对应函数参数的三种传入方式：转移所有权、可变借用、不可变借用，因此相应的 Fn 特征也有三种：
 > 所有实现`Fn`的都实现了`FnMut`，所有实现了`FnMut`的都实现了`FnOnce`
 - 取得所有权: `FnOnce`, applies to closures that can be called once. **All closures implement at least this trait**, because all closures can be called. A closure that moves captured values out of its body will only implement FnOnce and none of the other Fn traits, because it can only be called once.
 - 可变借用: `FnMut`，applies to closures that don’t move captured values out of their body, but that might mutate the captured values. These closures can be called more than once.
@@ -229,32 +229,40 @@ example: `FnOnce`
 > 闭包会拿走被捕获变量的所有权, 该闭包只能运行Once
 
 ```rs
-fn fn_once<F>(func: F)
+fn fn_once<F>(f_inner: F)
 where
     F: FnOnce(usize) -> bool,
 {
-    println!("{}", func(3));
-    // println!("{}", func(4)); // func转移所有权，第二次调用，直接报错
+    println!("{}", f_inner(100));
+    // println!("{}", f_inner(101)); // f_inner转移所有权，内部第二次调用，直接报错
 }
 
 fn main() {
-    let x = vec![1, 2, 3];
-    fn_once(|z| z == x.len())
+    let x = 100;
+    let f_outer = |z| z > x; // f_outer: impl Fn(usize)->bool
+    fn_once(f_outer);
+
+    println!("{}", f_outer(110)); // 因为f是Fn,所以可以再次调用
+    println!("{}", f_outer(90));
 }
 ```
 
 ```rs
-fn fn_once<F>(func: F)
+fn fn_once<F>(f_inner: F)
 where
     F: FnOnce(usize) -> bool + Copy, // 增加Copy trait
 {
-    println!("{}", func(3));
-    println!("{}", func(4)); // 因为Copy trait调用时使用的将是它的拷贝，所以并没有发生所有权的转移, 正常运行
+    println!("{}", f_inner(100));
+    println!("{}", f_inner(101)); // 因为Copy trait调用时使用的将是它的拷贝，所以并没有发生所有权的转移, 正常运行
 }
 
 fn main() {
-    let x = vec![1, 2, 3];
-    fn_once(|z| z == x.len())
+    let x = 100;
+    let f_outer = |z| z > x; // f_outer: impl Fn(usize)->bool
+    fn_once(f_outer);
+
+    println!("{}", f_outer(110)); // 因为f是Fn,所以可以再次调用
+    println!("{}", f_outer(90));
 }
 ```
 
