@@ -4,6 +4,7 @@
   - [Closure](#closure)
     - [Closure with generic](#closure-with-generic)
     - [Closure capture](#closure-capture)
+    - [Closure as return](#closure-as-return)
   - [Iterator](#iterator)
     - [custom iterator](#custom-iterator)
     - [modify `minigrep` with iterator](#modify-minigrep-with-iterator)
@@ -521,6 +522,28 @@ fn main() {
 fn exec<'a, F: FnOnce(&'a str) -> String>(f: F) {
     let v = f("hello");
     println!("{}", v)
+}
+```
+
+### Closure as return
+
+```rs
+fn factory(x: i32) -> Box<dyn Fn(i32) -> i32> {
+    let num = 5;
+
+    if x > 1 {
+        Box::new(move |x| x + num)
+    } else {
+        Box::new(move |x| x - num)
+    }
+}
+
+fn main() {
+    let func1 = factory(10);
+    let func2 = factory(0);
+
+    println!("{}", func1(12)); // 17
+    println!("{}", func2(12)); // 7
 }
 ```
 
