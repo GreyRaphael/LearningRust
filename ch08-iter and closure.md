@@ -6,6 +6,7 @@
     - [Closure capture](#closure-capture)
     - [Closure as return](#closure-as-return)
   - [Iterator](#iterator)
+    - [`Consumer` \& `Adapter`](#consumer--adapter)
     - [custom iterator](#custom-iterator)
     - [modify `minigrep` with iterator](#modify-minigrep-with-iterator)
     - [Iterator as function argument](#iterator-as-function-argument)
@@ -549,6 +550,10 @@ fn main() {
 
 ## Iterator
 
+- `iter`: 迭代不可变引用
+- `into_iter`: 创建的迭代器会获取所有权
+- `iter_mut`: 迭代可变引用
+
 所有的迭代器都实现了`Iterator` trait，定义大致是
 - 实现Iterator trait需要定义一个Item类型，它用于`next`方法的返回类型(迭代器的返回类型)
 - Iterator trait仅仅要求实现`next`方法，返回结果包裹在`Some`里面，迭代结束，返回`None`
@@ -644,27 +649,54 @@ fn main() {
 
 `Iterator` vs `IntoIterator`
 - `Iterator` 就是迭代器特征，只有实现了它才能称为迭代器，才能调用 `next`
-- 而 `IntoIterator` 强调的是某一个类型如果实现了该特征，它可以通过 `into_iter`，`iter`, `iter_mut()`变成一个迭代器。
+- 而 `IntoIterator` 强调的是某一个类型(比如`Vec`)如果实现了该特征，它可以通过 `into_iter`，`iter`, `iter_mut()`变成一个迭代器。
 
-summary：
-- `iter`: 迭代不可变引用
-- `into_iter`: 创建的迭代器会获取所有权
-- `iter_mut`: 迭代可变引用
+### `Consumer` & `Adapter`
 
-消耗迭代器
+消费者适配器(`Consumer`): 只要迭代器上的某个方法 A 在其内部调用了 `next` 方法，那么 A 就被称为消费性适配器：因为 `next` 方法会消耗掉迭代器上的元素，所以方法 A 的调用也会消耗掉迭代器上的元素, 比如`.sum()`, `.collect()`
+> Consumers take an iterator and return something other than an iterator, consuming the iterator in the process.
+
+```rs
+//                    Iterator  Adapter       Consumer
+//                        |       |              |
+let my_squares: Vec<_> = (1..6).map(|x| x * x).collect();
+println!("{:?}", my_squares);
+```
+
+```rs
+// sum源码
+fn sum<S>(self) -> S // self获取了所有权
+    where
+        Self: Sized,
+        S: Sum<Self::Item>,
+    {
+        Sum::sum(self)
+    }
+```
 
 ```rs
 fn main() {
     let v1 = vec![1, 2, 3];
-    let mut it1 = v1.iter();
-    let total: i32 = it1.sum(); // 耗尽迭代器
+    let mut v1_iter = v1.iter();
+    let total: i32 = v1_iter.sum(); // 耗尽迭代器
     println!("{}", total); //6
+
+    // 以下代码会报错，因为 `sum` 拿到了迭代器 `v1_iter` 的所有权, 无法再使用v1_iter
+    // println!("{:?}",v1_iter);
 }
 ```
 
-产生其他迭代器，比如map
+迭代器适配器(`Adapter`)
+> Adapters take an iterator and return another iterator, 比如`.map()`, `.zip()`, `.filter()`
 - map接收一个闭包，闭包作用于每个元素
 - 最终组成一个新的迭代器
+
+```rs
+//         Iterator  Adapter
+//             |       |
+let my_map = (1..6).map(|x| x * x);
+println!("{:?}", my_map);
+```
 
 ```rs
 fn main() {
