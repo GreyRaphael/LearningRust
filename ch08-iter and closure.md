@@ -628,7 +628,7 @@ fn main() {
     let values = vec![1, 2, 3];
 
     {
-        let result = match IntoIterator::into_iter(values) {
+        match IntoIterator::into_iter(values) {
             mut iter => loop {
                 match iter.next() {
                     Some(x) => {
@@ -638,10 +638,13 @@ fn main() {
                 }
             },
         };
-        result
     }
 }
 ```
+
+`Iterator` vs `IntoIterator`
+- `Iterator` 就是迭代器特征，只有实现了它才能称为迭代器，才能调用 `next`
+- 而 `IntoIterator` 强调的是某一个类型如果实现了该特征，它可以通过 `into_iter`，`iter`, `iter_mut()`变成一个迭代器。
 
 summary：
 - `iter`: 迭代不可变引用
