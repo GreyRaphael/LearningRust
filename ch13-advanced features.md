@@ -12,7 +12,7 @@
     - [Operator overloading](#operator-overloading)
     - [Calling Methods with the Same Name](#calling-methods-with-the-same-name)
     - [super trait](#super-trait)
-    - [Implement External Traits on External Types](#implement-external-traits-on-external-types)
+    - [newtype](#newtype)
   - [Advanced Types](#advanced-types)
     - [Type Aliases](#type-aliases)
     - [Never Type `!`](#never-type-)
@@ -452,7 +452,9 @@ fn main() {
 }
 ```
 
-### Implement External Traits on External Types
+### newtype
+
+Implement External Traits on External Types
 
 [孤儿规则](ch04-trait.md#basic-usage): trait及类型，至少有一个在本地
 > 通过`newtype`模式绕过该规则, 利用tuple struct创建一个新的类型
@@ -472,6 +474,34 @@ impl fmt::Display for Wrapper {
 fn main() {
     let w = Wrapper(vec![String::from("hello"), String::from("world")]);
     println!("w = {}", w);
+}
+```
+
+```rs
+use std::fmt;
+use std::ops::Add;
+
+struct Meters(u32);
+impl fmt::Display for Meters {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "目标地点距离你{}米", self.0)
+    }
+}
+
+impl Add for Meters {
+    type Output = Self;
+
+    fn add(self, other: Meters) -> Self {
+        Self(self.0 + other.0)
+    }
+}
+fn main() {
+    let d = calculate_distance(Meters(10), Meters(20));
+    println!("{}", d);
+}
+
+fn calculate_distance(d1: Meters, d2: Meters) -> Meters {
+    d1 + d2
 }
 ```
 
