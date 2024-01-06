@@ -890,6 +890,225 @@ fn using_other_iterator_trait_methods() {
 }
 ```
 
+custom `xxxIter` iterator and `iter()`
+
+```rs
+#[derive(Debug)]
+struct Todo {
+    message: String,
+    done: bool,
+}
+
+struct Todos {
+    list: Vec<Todo>,
+}
+
+struct TodosIter<'a> {
+    todos: &'a Todos,
+    index: usize,
+}
+
+impl<'a> Iterator for TodosIter<'a> {
+    type Item = &'a Todo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let todo = self.todos.list.get(self.index);
+        self.index += 1;
+        todo
+    }
+}
+
+impl Todos {
+    fn iter(&self) -> TodosIter {
+        TodosIter {
+            todos: self,
+            index: 0,
+        }
+    }
+}
+
+fn main() {
+    let todos = Todos {
+        list: vec![
+            Todo {
+                message: "Buy milk".to_string(),
+                done: false,
+            },
+            Todo {
+                message: "Buy eggs".to_string(),
+                done: false,
+            },
+            Todo {
+                message: "Buy bread".to_string(),
+                done: false,
+            },
+        ],
+    };
+    // 无法使用for语法糖
+    for todo in todos.iter() {
+        println!("{:?}", todo); // &Todo
+    }
+}
+```
+
+custom `xxxIntoIter` iterator and `into_iter()`
+
+```rs
+#[derive(Debug)]
+struct Todo {
+    message: String,
+    done: bool,
+}
+
+#[derive(Debug)]
+struct Todos {
+    list: Vec<Todo>,
+}
+
+struct TodosIntoIter {
+    todos: Todos,
+}
+
+impl Iterator for TodosIntoIter {
+    type Item = Todo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.todos.list.len() == 0 {
+            return None;
+        }
+        let result = self.todos.list.remove(0);
+        Some(result)
+    }
+}
+
+impl IntoIterator for Todos {
+    type Item = Todo;
+    type IntoIter = TodosIntoIter;
+
+    fn into_iter(self) -> TodosIntoIter {
+        TodosIntoIter { todos: self }
+    }
+}
+
+fn main() {
+    {
+        let todos = Todos {
+            list: vec![
+                Todo {
+                    message: "Buy milk".to_string(),
+                    done: false,
+                },
+                Todo {
+                    message: "Buy eggs".to_string(),
+                    done: false,
+                },
+                Todo {
+                    message: "Buy bread".to_string(),
+                    done: false,
+                },
+            ],
+        };
+    
+        for todo in todos.into_iter() {
+            println!("{:?}", todo); // Todo
+        }
+        // println!("{:?}", todos);// error, 失去所有权
+    }
+    {
+        let todos = Todos {
+            list: vec![
+                Todo {
+                    message: "Buy milk".to_string(),
+                    done: false,
+                },
+                Todo {
+                    message: "Buy eggs".to_string(),
+                    done: false,
+                },
+                Todo {
+                    message: "Buy bread".to_string(),
+                    done: false,
+                },
+            ],
+        };
+    
+        // 可以直接使用for语法糖
+        for todo in todos {
+            println!("{:?}", todo); // Todo
+        }
+        // println!("{:?}", todos);// error, 失去所有权
+    }
+}
+```
+
+custom `xxxIterMut` iterator and `iter_mut()`
+
+```rs
+#[derive(Debug)]
+struct Todo {
+    message: String,
+    done: bool,
+}
+
+#[derive(Debug)]
+struct Todos {
+    list: Vec<Todo>,
+}
+
+struct TodosIterMut<'a> {
+    todos: &'a mut Todos,
+    index: usize,
+}
+
+impl<'a> Iterator for TodosIterMut<'a> {
+    type Item = &'a mut Todo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.todos.list.len() {
+            let item = &mut self.todos.list[self.index] as *mut _;
+            self.index += 1;
+            Some(unsafe { &mut *item })
+        } else {
+            None
+        }
+    }
+}
+
+impl Todos {
+    fn iter_mut(&mut self) -> TodosIterMut {
+        TodosIterMut {
+            todos: self,
+            index: 0,
+        }
+    }
+}
+
+fn main() {
+    let mut todos = Todos {
+        list: vec![
+            Todo {
+                message: "Buy milk".to_string(),
+                done: false,
+            },
+            Todo {
+                message: "Buy eggs".to_string(),
+                done: false,
+            },
+            Todo {
+                message: "Buy bread".to_string(),
+                done: false,
+            },
+        ],
+    };
+
+    for todo in todos.iter_mut() { // &mut Todo
+        todo.done = true;
+        todo.message= todo.message.to_uppercase();
+    }
+    println!("{:?}", todos);
+}
+```
+
 ### modify `minigrep` with iterator
 
 iterator改造[minigrep](ch07-io.md#test-driven-development)例子
