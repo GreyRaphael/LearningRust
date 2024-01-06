@@ -600,7 +600,6 @@ fn main() {
 ## Iterator
 
 迭代器: 不使用索引，而能遍历集合的工具(by `next()`)
-> Rust只能通过迭代器访问集合，不能通过索引。
 
 ```rs
 fn main() {
@@ -635,7 +634,7 @@ fn main() {
 }
 ```
 
-所有的迭代器(`Iter`, `IterMut`, `IntoIter`)都实现了`Iterator` trait，进而能够被`for`循环遍历
+所有的迭代器(`Iter`, `IterMut`, `IntoIter`)都实现了`Iterator` trait，所以都有`.next()`方法，进而能够被`for`循环遍历
 - 实现Iterator trait需要定义一个Item类型，它用于`next`方法的返回类型(迭代器的返回类型)
 - Iterator trait仅仅要求实现`next`方法，返回结果包裹在`Some`里面，迭代结束，返回`None`, 其他实现比如`map()`, `zip()`, `filter()`都自动被Rust实现
 
@@ -646,10 +645,8 @@ pub trait Iterator{
 }
 ```
 
-数组、Range, 动态数组Vec, HashMap
-1. 因为实现了`IntoIterator` trait, 那么它们可以调用`.iter()`, `.iter_mut()`, `.into_iter()`变成迭代器`Iter`, `IterMut`, `IntoIter`
-1. 因为`Iter`, `IterMut`, `IntoIter`都实现了`Iterator` trait，所以可以使用`.next()`，进而能够通过`for`循环遍历
-1. Rust采用语法糖，可以直接使用`for`循环遍历数组、Range, 动态数组Vec, HashMap
+数组、Range, 动态数组Vec, HashMap, 因为实现了`IntoIterator` trait, Rust使用语法糖，自动调用`IntoIterator::into_iter(xxx)`变成迭代器`IntoIter`，所以可以直接使用`for`循环遍历数组、Range, 动态数组Vec, HashMap，不需要先创建一个Iterator然后进行`for`循环遍历
+> `IntoIterator::into_iter(xxx)`相当于`xxx.into_iter()`
 
 
 ```rs
@@ -691,7 +688,7 @@ fn main() {
 }
 ```
 
-更加Iterator源码
+根据terator源码
 
 ```rs
 pub trait Iterator{
