@@ -45,6 +45,12 @@ fn main() {
 - 闭包的类型一旦被确定，就不能改变了
 
 ```rs
+let sum = |x: i32, y: i32| -> i32 {
+    x + y
+}
+```
+
+```rs
 use std::{thread, time::Duration};
 
 fn main() {
@@ -96,11 +102,6 @@ if intensity < 25 {
 struct的定义需要知道所有字段的类型
 - 每个闭包都有自己唯一的匿名类型，即使两个闭包签名一样
 - 所以需要使用泛型和Trait Bound
-
-`Fn Trait`由标准库提供，所有闭包至少实现了以下trait之一
-- `Fn`
-- `FnMut`
-- `FnOnce`
 
 ```rs
 use std::{thread, time::Duration};
@@ -207,6 +208,51 @@ fn main() {
     let v2 = clo1.value(2);
     println!("{}", v1); // 1
     println!("{}", v2); // 2
+}
+```
+
+example: 改造Cacher仅仅支持`Fn(u32)->u32`闭包的情况，使它能够支持`Fn(E)->E`类型闭包
+
+```rs
+struct Cacher<T, E>
+where
+    T: Fn(E) -> E,
+    E: Copy,
+{
+    calc: T,
+    value: Option<E>,
+}
+
+impl<T, E> Cacher<T, E>
+where
+    T: Fn(E) -> E,
+    E: Copy,
+{
+    fn new(calc: T) -> Cacher<T, E> {
+        Cacher { calc, value: None }
+    }
+
+    fn value(&mut self, arg: E) -> E {
+        match self.value {
+            Some(v) => v,
+            None => {
+                let v = (self.calc)(arg);
+                self.value = Some(v);
+                v
+            }
+        }
+    }
+}
+
+fn main() {
+    let mut c = Cacher::new(|a| a + 1);
+
+    let v1 = c.value(1);
+    println!("{}", v1);
+
+    let mut c = Cacher::new(|a| a * 2.0 + 1.0);
+    let f1 = c.value(10.0);
+    println!("{:?}", f1);
 }
 ```
 
