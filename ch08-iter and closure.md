@@ -276,11 +276,26 @@ fn main() {
 }
 ```
 
-闭包捕获变量有三种途径，恰好对应函数参数的三种传入方式：转移所有权、可变借用、不可变借用，因此相应的 Fn 特征也有三种：
-> 所有实现`Fn`的都实现了`FnMut`，所有实现了`FnMut`的都实现了`FnOnce`: `FnOnce > FnMut > Fn`
-- 取得所有权: `FnOnce`, applies to closures that can be called once. **All closures implement at least this trait**, because all closures can be called. A closure that moves captured values out of its body will only implement FnOnce and none of the other Fn traits, because it can only be called once.
-- 可变借用: `FnMut`，applies to closures that don’t move captured values out of their body, but that might mutate the captured values. These closures can be called more than once.
-- 不可变借用: `Fn`，applies to closures that don’t move captured values out of their body and that don’t mutate captured values, as well as closures that capture nothing from their environment. These closures can be called more than once without mutating their environment, which is important in cases such as calling a closure multiple times concurrently.
+闭包捕获变量有三种途径，恰好对应函数参数的三种传入方式：不可变引用，可变引用，转移所有权，因此相应的 Fn 特征也有三种：`Fn`, `FnMut`, `FnOnce`
+
+```rs
+pub trait Fn<Args>: FnMut<Args> {
+    extern "rust-call" fn call(&self, args: Args) -> Self::Output;
+}
+
+pub trait FnMut<Args>: FnOnce<Args> {
+    extern "rust-call" fn call_mut(&mut self, args: Args) -> Self::Output;
+}
+
+pub trait FnOnce<Args> {
+    type Output;
+
+    extern "rust-call" fn call_once(self, args: Args) -> Self::Output;
+}
+```
+
+从源码的特征约束来看，所有实现`Fn`的都实现了`FnMut`，所有实现了`FnMut`的都实现了`FnOnce`
+> Fn 获取 `&self`(不可变引用)，FnMut 获取 `&mut self`(可变引用)，而 FnOnce 获取 `self`(转移所有权)。 在实际项目中，建议先使用 Fn 特征
 
 example: `FnOnce`
 > 闭包会拿走被捕获变量的所有权, 所以闭包只能运行Once
@@ -511,31 +526,10 @@ fn exec<F: Fn(String) -> ()>(f: F) {
 }
 ```
 
-example: 三种Fn特征的关系
-
-从特征约束能看出来 Fn 的前提是实现 FnMut，FnMut 的前提是实现 FnOnce，因此要实现 Fn 就要同时实现 FnMut 和 FnOnce
-> Fn 获取 `&self`，FnMut 获取 `&mut self`，而 FnOnce 获取 `self`。 在实际项目中，建议先使用 Fn 特征
-
-```rs
-pub trait Fn<Args>: FnMut<Args> {
-    extern "rust-call" fn call(&self, args: Args) -> Self::Output;
-}
-
-pub trait FnMut<Args>: FnOnce<Args> {
-    extern "rust-call" fn call_mut(&mut self, args: Args) -> Self::Output;
-}
-
-pub trait FnOnce<Args> {
-    type Output;
-
-    extern "rust-call" fn call_once(self, args: Args) -> Self::Output;
-}
-```
-
 实际上，一个闭包并不仅仅实现某一种 Fn 特征，规则如下：
-1. 所有的闭包都自动实现了 FnOnce 特征，因此任何一个闭包都至少可以被调用一次
-1. 没有移出所捕获变量的所有权的闭包自动实现了 FnMut 特征
-1. 不需要对捕获变量进行改变的闭包自动实现了 Fn 特征
+1. 取得所有权: `FnOnce`, applies to closures that can be called once. **All closures implement at least this trait**, because all closures can be called. A closure that moves captured values out of its body will only implement FnOnce and none of the other Fn traits, because it can only be called once.(所有的闭包都自动实现了 FnOnce 特征，因此任何一个闭包都至少可以被调用一次)
+1. 可变借用: `FnMut`，applies to closures that don’t move captured values out of their body, but that might mutate the captured values. These closures can be called more than once.(没有移出所捕获变量的所有权的闭包自动实现了 FnMut 特征)
+1. 不可变借用: `Fn`，applies to closures that don’t move captured values out of their body and that don’t mutate captured values, as well as closures that capture nothing from their environment. These closures can be called more than once without mutating their environment, which is important in cases such as calling a closure multiple times concurrently. (不需要对捕获变量进行改变的闭包自动实现了 Fn 特征)
 
 ```rs
 fn main() {
