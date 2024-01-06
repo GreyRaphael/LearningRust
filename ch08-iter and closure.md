@@ -6,7 +6,7 @@
     - [Closure capture](#closure-capture)
     - [Closure as return](#closure-as-return)
   - [Iterator](#iterator)
-    - [`Consumer` \& `Adapter`](#consumer--adapter)
+    - [`Adapter` and `Consumer`](#adapter-and-consumer)
     - [custom iterator](#custom-iterator)
     - [modify `minigrep` with iterator](#modify-minigrep-with-iterator)
     - [Iterator as function argument](#iterator-as-function-argument)
@@ -599,13 +599,45 @@ fn main() {
 
 ## Iterator
 
-- `iter`: 迭代不可变引用
-- `into_iter`: 创建的迭代器会获取所有权
-- `iter_mut`: 迭代可变引用
+迭代器: 不使用索引，而能遍历集合的工具(by `next()`)
+> Rust只能通过迭代器访问集合，不能通过索引。
 
-所有的迭代器都实现了`Iterator` trait，定义大致是
+```rs
+fn main() {
+    {
+        let v = vec![1, 2, 3, 4, 5];
+
+        let it = v.iter(); // 创建不可变引用的迭代器Iter<'_, i32>
+        for i in it {
+            print!("{},", i); // i:&i32
+        }
+        println!()
+    }
+    {
+        let mut v = vec![1, 2, 3, 4, 5];
+
+        let it = v.iter_mut(); // 创建可变引用的迭代器IterMut<'_, i32>
+        for i in it {
+            *i += 1; // i: &mut i32
+        }
+
+        println!("{:?}", v);
+    }
+    {
+        let v = vec![1, 2, 3, 4, 5];
+        let it = v.into_iter(); // 创建获取所有权的迭代器IntoIter<i32>
+        for i in it {
+            print!("{},", i); // i:i32
+        }
+        println!();
+        // println!("{:?}", v); // error, it已经获取v的所有权
+    }
+}
+```
+
+所有的迭代器(`Iter`, `IterMut`, `IntoIter`)都实现了`Iterator` trait，进而能够被`for`循环遍历
 - 实现Iterator trait需要定义一个Item类型，它用于`next`方法的返回类型(迭代器的返回类型)
-- Iterator trait仅仅要求实现`next`方法，返回结果包裹在`Some`里面，迭代结束，返回`None`
+- Iterator trait仅仅要求实现`next`方法，返回结果包裹在`Some`里面，迭代结束，返回`None`, 其他实现比如`map()`, `zip()`, `filter()`都自动被Rust实现
 
 ```rs
 pub trait Iterator{
@@ -614,54 +646,63 @@ pub trait Iterator{
 }
 ```
 
-simple example
+数组、Range, 动态数组Vec, HashMap
+1. 因为实现了`IntoIterator` trait, 那么它们可以调用`.iter()`, `.iter_mut()`, `.into_iter()`变成迭代器`Iter`, `IterMut`, `IntoIter`
+1. 因为`Iter`, `IterMut`, `IntoIter`都实现了`Iterator` trait，所以可以使用`.next()`，进而能够通过`for`循环遍历
+1. Rust采用语法糖，可以直接使用`for`循环遍历数组、Range, 动态数组Vec, HashMap
+
 
 ```rs
+use std::collections::HashMap;
+
 fn main() {
-    let v1 = vec![1, 2, 3, 4, 5, 6];
-    let iter1 = v1.iter();
-    for i in iter1 {
-        // &i32
-        print!("{},", i);
+    // 数组
+    let arr = [11, 22, 33, 44];
+    for i in arr {
+        print!("{} ", i);
     }
-    // vec实现了IntoIterator trait
-    for i in v1 {
-        // i32
-        print!("{},", i);
-    }
-    println!("");
+    println!();
 
-    let v2 = vec![11, 22, 33];
-    let iter21 = v2.into_iter();
-    for i in iter21 {
-        // i32
-        print!("{},", i);
+    // Range<i32>
+    for i in 0..10 {
+        print!("{} ", i);
     }
-    println!("");
+    println!();
 
-    let mut v3 = vec![100, 200, 300];
-    let iter31 = v3.iter_mut();
-    for i in iter31 {
-        // &mut i32
-        *i = *i - 10;
+    let r = 'a'..'e'; // Range<char>
+    for i in r {
+        print!("{} ", i);
     }
-    for i in v3 {
-        // i32
-        print!("{},", i);
+    println!();
+
+    // 动态数组
+    let v = vec![1, 2, 3, 4, 5];
+    for i in v {
+        print!("{} ", i);
     }
-    println!("");
+    println!();
+
+    // HashMap
+    let m = HashMap::from([("a", 1), ("b", 2), ("c", 3)]);
+    for (k, v) in m {
+        print!("{}:{} ", k, v);
+    }
+    println!()
 }
 ```
 
+更加Iterator源码
+
 ```rs
-fn main() {
-    let range1 = 0..5; // Range<i32>
-    // Range实现IntoIterator trait
-    for i in range1 {
-        print!("{},", i)
-    }
+pub trait Iterator{
+    type Item;
+    fn next(&mut self)->Option<Self::Item>;
 }
 ```
+
+- `.iter()` 方法实现的迭代器，调用 next 方法返回的类型是 `Some(&T)`
+- `.iter_mut()` 方法实现的迭代器，调用 next 方法返回的类型是 `Some(&mut T)`
+- `.into_iter()` 方法实现的迭代器，调用 next 方法返回的类型是 `Some(T)`
 
 ```rs
 fn main() {
@@ -696,44 +737,7 @@ fn main() {
 }
 ```
 
-`Iterator` vs `IntoIterator`
-- `Iterator` 就是迭代器特征，只有实现了它才能称为迭代器，才能调用 `next`
-- 而 `IntoIterator` 强调的是某一个类型(比如`Vec`)如果实现了该特征，它可以通过 `into_iter`，`iter`, `iter_mut()`变成一个迭代器。
-
-### `Consumer` & `Adapter`
-
-消费者适配器(`Consumer`): 只要迭代器上的某个方法 A 在其内部调用了 `next` 方法，那么 A 就被称为消费性适配器：因为 `next` 方法会消耗掉迭代器上的元素，所以方法 A 的调用也会消耗掉迭代器上的元素, 比如`.sum()`, `.collect()`
-> Consumers take an iterator and return something other than an iterator, consuming the iterator in the process.
-
-```rs
-//                    Iterator  Adapter       Consumer
-//                        |       |              |
-let my_squares: Vec<_> = (1..6).map(|x| x * x).collect();
-println!("{:?}", my_squares);
-```
-
-```rs
-// sum源码
-fn sum<S>(self) -> S // self获取了所有权
-    where
-        Self: Sized,
-        S: Sum<Self::Item>,
-    {
-        Sum::sum(self)
-    }
-```
-
-```rs
-fn main() {
-    let v1 = vec![1, 2, 3];
-    let mut v1_iter = v1.iter();
-    let total: i32 = v1_iter.sum(); // 耗尽迭代器
-    println!("{}", total); //6
-
-    // 以下代码会报错，因为 `sum` 拿到了迭代器 `v1_iter` 的所有权, 无法再使用v1_iter
-    // println!("{:?}",v1_iter);
-}
-```
+### `Adapter` and `Consumer`
 
 迭代器适配器(`Adapter`)
 > Adapters take an iterator and return another iterator, 比如`.map()`, `.zip()`, `.filter()`
@@ -805,6 +809,39 @@ fn main() {
         .fold(0u64, |sum, acm| sum + acm);
 
     println!("{}", val);
+}
+```
+
+消费者适配器(`Consumer`): 只要迭代器上的某个方法 A 在其内部调用了 `next` 方法，那么 A 就被称为消费性适配器：因为 `next` 方法会消耗掉迭代器上的元素，所以方法 A 的调用也会消耗掉迭代器上的元素, 比如`.sum()`, `.collect()`
+> Consumers take an iterator and return something other than an iterator, consuming the iterator in the process.
+
+```rs
+//                    Iterator  Adapter       Consumer
+//                        |       |              |
+let my_squares: Vec<_> = (1..6).map(|x| x * x).collect();
+println!("{:?}", my_squares);
+```
+
+```rs
+// sum源码
+fn sum<S>(self) -> S // self获取了所有权
+    where
+        Self: Sized,
+        S: Sum<Self::Item>,
+    {
+        Sum::sum(self)
+    }
+```
+
+```rs
+fn main() {
+    let v1 = vec![1, 2, 3];
+    let mut v1_iter = v1.iter();
+    let total: i32 = v1_iter.sum(); // 耗尽迭代器
+    println!("{}", total); //6
+
+    // 以下代码会报错，因为 `sum` 拿到了迭代器 `v1_iter` 的所有权, 无法再使用v1_iter
+    // println!("{:?}",v1_iter);
 }
 ```
 
