@@ -30,15 +30,20 @@ rustup update
 ```
 
 ```bash
+# In Debian
 sudo apt update
-sudo apt install rustc
-sudo apt install cargo
-sudo apt install rust-src
-# format rust code
-sudo apt install rustfmt
+sudo apt install rustc cargo rust-src rustfmt
 
 rustc --version
 cargo --version
+
+# install vscode extension: rust-analyzer
+```
+
+```bash
+# In Fedora
+sudo dnf update
+sudo dnf install rust rustfmt cargo rust-src
 
 # install vscode extension: rust-analyzer
 ```
