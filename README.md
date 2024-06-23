@@ -48,6 +48,11 @@ sudo dnf install rust rustfmt cargo rust-src
 # install vscode extension: rust-analyzer
 ```
 
+```bash
+# add reqwest with feathere block
+cargo add reqwest -F blocking
+```
+
 ### First Example
 
 ```rs
