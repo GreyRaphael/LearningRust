@@ -40,6 +40,8 @@
 
 ## `Box<T>`
 
+`Box<T>`对应于C++的`unique_ptr<T>`, `Box::new(x: T) -> Box<T>`是一个函数，所以传入它的数据会出现在栈上，再移动到堆上, 未release优化的时候，`x`太大(e.g. > 16M)会导致stackoverflow
+
 > `Box<T>`是拥有一个元素的 **tuple struct**
 
 ```rs
