@@ -11,6 +11,7 @@
   - [Memory Leak](#memory-leak)
     - [`Weak<T>`](#weakt)
   - [Raw Pointer](#raw-pointer)
+  - [Cow](#cow)
 
 ## introduction
 
@@ -839,6 +840,66 @@ fn main() {
 
     // a=42,b=carrytowel,c=thanksfish
     println!("a={},b={},c={}", a, b, c);
+}
+```
+
+## Cow
+
+Cow = Copy on Write
+
+Cow with string
+
+```rs
+use std::borrow::Cow;
+
+fn process_text<'a>(input: &'a str) -> Cow<'a, str> {
+    if input.contains("example") {
+        // Clone and modify the string if it contains "example"
+        let mut new_string = input.replace("example", "sample");
+        new_string.push_str(" with Cow");
+        Cow::Owned(new_string)
+    } else {
+        // Use the original string without cloning
+        Cow::Borrowed(input)
+    }
+}
+
+fn main() {
+    let my_text = "This is an example string";
+    let processed = process_text(my_text);
+    println!("Processed text: {}", processed);
+
+    let my_text = "This string does not need changes";
+    let processed = process_text(my_text);
+    println!("Processed text: {}", processed);
+}
+```
+
+Cow with Vec
+
+```rs
+use std::borrow::Cow;
+
+fn modify_vector<'a>(input: &'a [i32]) -> Cow<'a, [i32]> {
+    if input.iter().any(|&x| x < 10) {
+        // If any element is less than 10, clone the vector and add elements
+        let mut new_vec = input.to_vec();
+        new_vec.extend_from_slice(&[10, 20, 30]);
+        Cow::Owned(new_vec)
+    } else {
+        // No modifications needed, return a borrowed reference
+        Cow::Borrowed(input)
+    }
+}
+
+fn main() {
+    let numbers = vec![15, 25, 35];
+    let processed = modify_vector(&numbers);
+    println!("Processed vector: {:?}", processed);
+
+    let numbers = vec![1, 2, 3];
+    let processed = modify_vector(&numbers);
+    println!("Processed vector: {:?}", processed);
 }
 ```
 
