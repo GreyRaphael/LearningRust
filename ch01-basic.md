@@ -1068,14 +1068,12 @@ fn main() {
         // Vec 实现了 Deref，&Vec<T> 会被自动解引用为 &[T]
         print_slice1(ref1);
         print_slice1(slice1);
-        print_slice1(slice3);
     }
     {
         // &Vec<T> 支持 AsRef<[T]>
         print_slice2(ref1);
         // &[T] 支持 AsRef<[T]>
         print_slice2(slice1);
-        print_slice2(slice3);
         // Vec<T> 支持 AsRef<[T]>
         print_slice2(vec);
     }
@@ -1092,11 +1090,53 @@ fn print_slice2<T: AsRef<[U]>, U: fmt::Debug>(s: T) {
 }
 ```
 
+> `String` 是一个特殊的 `Vec`，所以在 `String` 上做切片，也是一个特殊的结构 `&str`。
 
 ```rs
+use core::fmt;
+
 fn main() {
-    let li = [1, 2, 3, 4, 5];// type is [i32, 5]
-    let slice = &li[1..3]; // [2, 3], type is &[i32]
+    let s: String = "你好china".into();
+    let ref1: &String = &s;
+    let slice1: &str = &s[..6]; // 你好
+    println!("{:?}", slice1);
+    let slice2: &str = &s[..];
+    let slice3: &str = s.as_str();
+
+    {
+        // &String 会被解引用成 &str
+        print_slice1(ref1);
+        print_slice1(slice1);
+    }
+    {
+        // &String 支持 AsRef<str>
+        print_slice2(ref1);
+        // &str 支持 AsRef<str>
+        print_slice2(slice1);
+        // String 支持 AsRef<str>
+        print_slice2(s.clone());
+    }
+    {
+        // &String 实现了 AsRef<[u8]>, result is [228, 189, 160, 229, 165, 189, 99, 104, 105, 110, 97]
+        print_slice3(ref1);
+        // &str 实现了 AsRef<[u8]>, result is [228, 189, 160, 229, 165, 189]
+        print_slice3(slice1);
+        // String 实现了 AsRef<[u8]>, reuslt is [228, 189, 160, 229, 165, 189, 99, 104, 105, 110, 97]
+        print_slice3(s.clone());
+    }
+}
+
+fn print_slice1(s: &str) {
+    println!("{:?}", s);
+}
+
+fn print_slice2<T: AsRef<str>>(s: T) {
+    println!("{:?}", s.as_ref());
+}
+
+fn print_slice3<T: AsRef<[U]>, U: fmt::Debug>(s: T) {
+    let slice: &[U] = s.as_ref();
+    println!("{:?}", slice);
 }
 ```
 
