@@ -1012,6 +1012,87 @@ fn dangle()->&String {
 
 > 除了reference, 不持有所有权的数据类型: slice; slice本质是指向某一段数据的指针
 
+slice用`[T]`表示
+- `&[T]`, read-only reference to slice
+- `&mut [T]`, mutable reference to slice
+- `Box<[T]>`, heap allocated slice
+
+```rs
+fn main() {
+    // slice of array, data on stck
+    let arr: [u32; 5] = [1, 2, 3, 4, 5];
+    let slice1: &[u32] = &arr[..2];
+
+    // slice of vector, data on heap
+    let vec: Vec<u32> = vec![1, 2, 3, 4, 5, 6];
+    let slice2: &[u32] = &vec[..2];
+
+    // equal: length and type are all the same
+    assert_eq!(slice1, slice2);
+    // length not the same so not equal
+    assert_ne!(&arr[..], &vec[..]);
+}
+```
+
+vector reference vs slice
+
+```rs
+fn main() {
+    let mut vec: Vec<u32> = vec![1, 2, 3, 4, 5, 6];
+    // type is &Vec<i32>
+    let ref1 = &vec;
+    // type is &[u32]
+    let slice1 = vec.as_slice();
+    // type is &mut [u32]
+    let slice2 = vec.as_mut_slice();
+    // type is &[u32]
+    let slice3 = &vec[..];
+}
+```
+
+slice as parameter
+
+```rs
+use core::fmt;
+
+fn main() {
+    let vec: Vec<u32> = vec![1, 2, 3, 4, 5, 6];
+    // type is &Vec<i32>
+    let ref1 = &vec;
+    // type is &[u32]
+    let slice1 = vec.as_slice();
+    // type is &[u32]
+    let slice3 = &vec[..];
+
+    {
+        // Vec 实现了 Deref，&Vec<T> 会被自动解引用为 &[T]
+        print_slice1(ref1);
+        print_slice1(slice1);
+        print_slice1(slice3);
+    }
+    {
+        // &Vec<T> 支持 AsRef<[T]>
+        print_slice2(ref1);
+        // &[T] 支持 AsRef<[T]>
+        print_slice2(slice1);
+        print_slice2(slice3);
+        // Vec<T> 支持 AsRef<[T]>
+        print_slice2(vec);
+    }
+}
+
+// parameter is &[T], slice
+fn print_slice1<T: fmt::Debug>(s: &[T]) {
+    println!("{:?}", s);
+}
+
+fn print_slice2<T: AsRef<[U]>, U: fmt::Debug>(s: T) {
+    let slice: &[U] = s.as_ref();
+    println!("{:?}", slice);
+}
+```
+
+
 ```rs
 fn main() {
     let li = [1, 2, 3, 4, 5];// type is [i32, 5]
