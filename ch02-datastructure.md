@@ -13,6 +13,7 @@
     - [string escape](#string-escape)
     - [string visit element](#string-visit-element)
   - [`HashMap<K, V>`](#hashmapk-v)
+  - [BTree](#btree)
 
 ## struct
 
@@ -908,5 +909,86 @@ fn main() {
     }
 
     println!("{:?}", map); // {"wonderful": 1, "world": 2, "hello": 1}
+}
+```
+
+## BTree
+
+To implement something like `absl::btree_multiset` or `std::multiset` in Rust
+
+```rs
+use std::collections::BTreeMap;
+
+#[derive(Debug, Eq, PartialEq)]
+struct MyStruct {
+    field1: i32,
+    field2: i32,
+}
+
+impl Ord for MyStruct {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        // order by field1 in asc order, field2 in desc order
+        self.field1
+            .cmp(&other.field1)
+            .then_with(|| other.field2.cmp(&self.field2))
+    }
+}
+
+impl PartialOrd for MyStruct {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+fn main() {
+    let mut map: BTreeMap<MyStruct, usize> = BTreeMap::new();
+
+    // Inserting elements
+    let new_struct = MyStruct {
+        field1: 5,
+        field2: 10,
+    };
+    *map.entry(new_struct).or_insert(0) += 1;
+
+    let new_struct = MyStruct {
+        field1: 3,
+        field2: 7,
+    };
+    *map.entry(new_struct).or_insert(0) += 1;
+
+    let new_struct = MyStruct {
+        field1: 5,
+        field2: 10,
+    };
+    *map.entry(new_struct).or_insert(0) += 1;
+
+    let new_struct = MyStruct {
+        field1: 5,
+        field2: 7,
+    };
+    *map.entry(new_struct).or_insert(0) += 1;
+
+    // Accessing and modifying elements
+    for (key, value) in &map {
+        println!("{:?} occurs {} times", key, value);
+    }
+
+    // Popping an element (simulate by removing it)
+    let key_to_remove = MyStruct {
+        field1: 5,
+        field2: 10,
+    };
+    if let Some(count) = map.get_mut(&key_to_remove) {
+        if *count > 1 {
+            *count -= 1;
+        } else {
+            map.remove(&key_to_remove);
+        }
+    }
+
+    println!("After modification:");
+    for (key, value) in &map {
+        println!("{:?} occurs {} times", key, value);
+    }
 }
 ```
