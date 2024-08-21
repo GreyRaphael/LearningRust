@@ -7,6 +7,7 @@
     - [Rust Build \& Use C++ Static Library](#rust-build--use-c-static-library)
     - [C++ Use Rust Shared Library](#c-use-rust-shared-library)
     - [C++ Use Rust Static Library](#c-use-rust-static-library)
+  - [tokio async](#tokio-async)
 
 ## Rust and C++ Interoperability
 
@@ -435,5 +436,47 @@ target_link_libraries(proj2 PRIVATE ${CMAKE_SOURCE_DIR}/rust-lib/libmyadd.a)
 int main(int, char**) {
     auto result = rust_function(100, 200);
     std::cout << result << '\n';
+}
+```
+
+## tokio async
+
+simple example
+- `cargo new proj1`, then `cd proj1`
+- `cargo add tokio -F macros -F rt -F rt-multi-thread`, then edit `src/main.rs`
+
+```rs
+// main.rs
+use std::{thread::sleep, time::Duration};
+
+// #[tokio::main] // default multi-thread
+// #[tokio::main(flavor = "multi_thread", worker_threads = 4)]
+#[tokio::main(flavor = "current_thread")] // single thread
+async fn main() {
+    println!("begin tasks");
+    let value = 100;
+
+    let job1 = tokio::spawn(async move {
+        let ret = task1(value).await;
+        println!("job1 get {}", ret);
+    });
+    let job2 = tokio::spawn(async move {
+        let ret = task2(value).await;
+        println!("job2 get {}", ret);
+    });
+
+    let _ = tokio::join!(job1, job2);
+}
+
+async fn task1(x: i32) -> i32 {
+    sleep(Duration::new(2, 0));
+    println!("task 1 costs 2s");
+    111111 + x
+}
+
+async fn task2(x: i32) -> i32 {
+    sleep(Duration::new(4, 0));
+    println!("task 2 costs 4s");
+    2222 + x
 }
 ```
