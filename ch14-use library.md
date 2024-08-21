@@ -480,3 +480,69 @@ async fn task2(x: i32) -> i32 {
     2222 + x
 }
 ```
+
+tokie with `Future`
+
+```rs
+use std::{
+    future::Future,
+    pin::Pin,
+    task::{Context, Poll},
+    thread::sleep,
+    time::{Duration, Instant},
+};
+
+struct AsyncTimer {
+    expiration_time: Instant,
+}
+
+impl Future for AsyncTimer {
+    type Output = String;
+    fn poll(self: Pin<&mut Self>, ctx: &mut Context) -> Poll<Self::Output> {
+        if Instant::now() >= self.expiration_time {
+            println!("time up, go go go");
+            Poll::Ready("timer completed!".into())
+        } else {
+            println!("go to sleep");
+            let waker = ctx.waker().clone();
+            let expiration_time = self.expiration_time;
+            std::thread::spawn(move || {
+                let current_time = Instant::now();
+                if current_time < expiration_time {
+                    sleep(expiration_time - current_time);
+                }
+                waker.wake();
+            });
+            Poll::Pending
+        }
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    println!("begin tasks");
+    let value = 100;
+    let timer=Instant::now();
+
+    let job1 = tokio::spawn(async move {
+        let ret = task1(value).await;
+        println!("job1 get: {}", ret);
+    });
+    let job2 = tokio::spawn(async {
+        let future1 = AsyncTimer {
+            expiration_time: Instant::now() + Duration::from_secs(3),
+        };
+        let ret = future1.await;
+        println!("job2 get: {}", ret);
+    });
+
+    let _ = tokio::join!(job1, job2);
+    println!("time elapsed {:?}", timer.elapsed());
+}
+
+async fn task1(x: i32) -> i32 {
+    sleep(Duration::new(2, 0));
+    println!("task 1 costs 2s");
+    111111 + x
+}
+```
