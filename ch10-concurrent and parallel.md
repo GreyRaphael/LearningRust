@@ -1,12 +1,17 @@
 # Rust Concurrency and Parallel
 
 - [Rust Concurrency and Parallel](#rust-concurrency-and-parallel)
-  - [Thread](#thread)
-  - [Message Passing](#message-passing)
+  - [concurrency by thread](#concurrency-by-thread)
+    - [Message Passing](#message-passing)
+  - [concurrency by tokio](#concurrency-by-tokio)
   - [Shared-State Concurrency](#shared-state-concurrency)
   - [`Send`, `Sync` trait](#send-sync-trait)
 
-## Thread
+Rust supports concurrency through two methods
+1. the use of the `async/await` paradigm(tokio)
+2. the use of `threads` and `channels`.
+
+## concurrency by thread
 
 ```rs
 use std::thread;
@@ -58,7 +63,7 @@ fn main() {
 }
 ```
 
-## Message Passing
+### Message Passing
 
 消息传递: 一种很流行且能保证安全并发的技术
 - 线程通过彼此发送消息来进行通信
@@ -157,6 +162,28 @@ fn main() {
     for received in rx {
         println!("mainthread get: {}", received);
     }
+}
+```
+
+## concurrency by tokio
+
+```rs
+use tokio::time::{sleep, Duration};
+
+async fn execute_task() {
+    println!("Task has begun.");
+    sleep(Duration::from_secs(2)).await;
+    println!("Task is done.");
+}
+
+#[tokio::main]
+async fn main() {
+    let task_handle = tokio::spawn(async {
+        execute_task().await;
+    });
+
+    task_handle.await.unwrap();
+    println!("Main function completed.");
 }
 ```
 
