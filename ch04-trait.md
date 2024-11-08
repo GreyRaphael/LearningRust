@@ -10,6 +10,10 @@
 - [implement `Display` for custom type](#implement-display-for-custom-type)
 - [trait object](#trait-object)
 - [`self` vs `Self`](#self-vs-self)
+- [polymorphism summary](#polymorphism-summary)
+  - [Dynamic Dispatch with `dyn`](#dynamic-dispatch-with-dyn)
+  - [Static Dispatch with `enum`](#static-dispatch-with-enum)
+- [Compile-Time Polymorphism](#compile-time-polymorphism)
 
 > Trait: 告诉编译器，某种类型具有哪些并且可以与其它类型共享的功能。**抽象地定义共享行为**，与其他语言中的interface有点类似
 
@@ -696,5 +700,182 @@ impl Draw for Button {
 fn main() {
     let btn = Button;
     let newb = btn.draw();
+}
+```
+
+## polymorphism summary
+
+3 methods for rust polymorphism
+- Using Trait Objects (Dynamic Dispatch)
+- Using Enums (Static Dispatch)
+- Using Generics (Compile-Time Polymorphism)
+
+### Dynamic Dispatch with `dyn`
+
+> same as c++ **vtable**
+
+```rs
+// Define a trait
+trait Drawable {
+    fn draw(&self);
+}
+
+// Implement the trait for different structs
+struct Circle {
+    radius: f64,
+}
+
+impl Drawable for Circle {
+    fn draw(&self) {
+        println!("Drawing a circle with radius {}", self.radius);
+    }
+}
+
+struct Square {
+    side: f64,
+}
+
+impl Drawable for Square {
+    fn draw(&self) {
+        println!("Drawing a square with side {}", self.side);
+    }
+}
+
+fn main() {
+    // Create a vector of trait objects
+    let shapes: Vec<Box<dyn Drawable>> = vec![
+        Box::new(Circle { radius: 1.0 }),
+        Box::new(Square { side: 2.0 }),
+    ];
+
+    // Invoke the draw method on each shape
+    for shape in shapes.iter() {
+        shape.draw();
+    }
+}
+```
+
+### Static Dispatch with `enum`
+
+> like c++ `std::variant`
+
+```rs
+// Define a trait
+trait Drawable {
+    fn draw(&self);
+}
+
+// Implement the trait for different structs
+struct Circle {
+    radius: f64,
+}
+
+impl Drawable for Circle {
+    fn draw(&self) {
+        println!("Drawing a circle with radius {}", self.radius);
+    }
+}
+
+struct Square {
+    side: f64,
+}
+
+impl Drawable for Square {
+    fn draw(&self) {
+        println!("Drawing a square with side {}", self.side);
+    }
+}
+
+// Define an enum that can hold any Drawable type
+enum Shape {
+    Circle(Circle),
+    Square(Square),
+}
+
+impl Drawable for Shape {
+    fn draw(&self) {
+        match self {
+            Shape::Circle(c) => c.draw(),
+            Shape::Square(s) => s.draw(),
+        }
+    }
+}
+
+fn main() {
+    // Create a vector of enums
+    let shapes: Vec<Shape> = vec![
+        Shape::Circle(Circle { radius: 1.0 }),
+        Shape::Square(Square { side: 2.0 }),
+    ];
+
+    // Invoke the draw method on each shape
+    for shape in shapes.iter() {
+        shape.draw();
+    }
+}
+```
+
+## Compile-Time Polymorphism
+
+> like c++ **template**
+
+```rs
+// Define a trait
+trait Drawable {
+    fn draw(&self);
+}
+
+// Implement the trait for different structs
+struct Circle {
+    radius: f64,
+}
+
+impl Drawable for Circle {
+    fn draw(&self) {
+        println!("Drawing a circle with radius {}", self.radius);
+    }
+}
+
+struct Square {
+    side: f64,
+}
+
+impl Drawable for Square {
+    fn draw(&self) {
+        println!("Drawing a square with side {}", self.side);
+    }
+}
+
+// Define a generic container
+struct Canvas<T: Drawable> {
+    shapes: Vec<T>,
+}
+
+impl<T: Drawable> Canvas<T> {
+    fn new() -> Self {
+        Canvas { shapes: Vec::new() }
+    }
+
+    fn add_shape(&mut self, shape: T) {
+        self.shapes.push(shape);
+    }
+
+    fn draw_all(&self) {
+        for shape in &self.shapes {
+            shape.draw();
+        }
+    }
+}
+
+fn main() {
+    let mut circle_canvas = Canvas::<Circle>::new();
+    circle_canvas.add_shape(Circle { radius: 1.0 });
+    // circle_canvas.add_shape(Square { side: 2.0 }); // This won't compile
+
+    circle_canvas.draw_all();
+
+    let mut square_canvas = Canvas::<Square>::new();
+    square_canvas.add_shape(Square { side: 2.0 });
+    square_canvas.draw_all();
 }
 ```
