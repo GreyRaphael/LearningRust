@@ -13,7 +13,7 @@
 - [polymorphism summary](#polymorphism-summary)
   - [Dynamic Dispatch with `dyn`](#dynamic-dispatch-with-dyn)
   - [Static Dispatch with `enum`](#static-dispatch-with-enum)
-- [Compile-Time Polymorphism](#compile-time-polymorphism)
+  - [Compile-Time Polymorphism](#compile-time-polymorphism)
 
 > Trait: 告诉编译器，某种类型具有哪些并且可以与其它类型共享的功能。**抽象地定义共享行为**，与其他语言中的interface有点类似
 
@@ -815,7 +815,7 @@ fn main() {
 }
 ```
 
-## Compile-Time Polymorphism
+### Compile-Time Polymorphism
 
 > like c++ **template**
 
