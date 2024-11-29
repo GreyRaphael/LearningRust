@@ -6,6 +6,7 @@
   - [concurrency by tokio](#concurrency-by-tokio)
   - [Shared-State Concurrency](#shared-state-concurrency)
   - [`Send`, `Sync` trait](#send-sync-trait)
+  - [concurrency by rayon](#concurrency-by-rayon)
 
 Rust supports concurrency through two methods
 1. the use of the `async/await` paradigm(tokio)
@@ -304,3 +305,37 @@ Rust语言本身涉及并发性较少，其并发特性来自标准库
 > 如果`T`是`Sync`，那么`&T`就是`Send`  
 > 但是`Rc<T>`, `RefCell<T>`, `Cell<T>`没有实现`Sync`，只用于单线程场景  
 > `Mutex<T>`实现`Sync`，可用于多线程场景  
+
+## concurrency by rayon
+
+Rayon is a data parallelism library in Rust that simplifies parallel processing of collections. It efficiently distributes work across available CPU cores, making it well-suited for CPU-bound operations like heavy computations, data transformations, or matrix multiplications.
+- [Rayon](https://crates.io/crates/rayon) for parallelism in CPU-heavy workloads.
+- [Tokio](https://crates.io/crates/tokio) for asynchronous IO-heavy workloads.
+
+`cargo add rayon`
+
+```rs
+use rayon::prelude::*;
+
+fn sum_of_squares(input: &[i32]) -> i32 {
+    input
+        .par_iter() // <-- just change that!
+        .map(|&i| i * i)
+        .sum()
+}
+
+fn sum_of_squares2(input: &[i32]) -> Vec<i32> {
+    input
+        .par_iter() // <-- just change that!
+        .map(|&i| i * i)
+        .collect()
+}
+
+fn main() {
+    let data = vec![1, 2, 3, 4, 5];
+    let result1 = sum_of_squares(&data);
+    println!("result1={}", result1);
+    let result2 = sum_of_squares2(&data);
+    println!("result2={:?}", result2);
+}
+```
