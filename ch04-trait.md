@@ -10,10 +10,11 @@
 - [implement `Display` for custom type](#implement-display-for-custom-type)
 - [trait object](#trait-object)
 - [`self` vs `Self`](#self-vs-self)
-- [polymorphism summary](#polymorphism-summary)
-  - [Dynamic Dispatch with `dyn`](#dynamic-dispatch-with-dyn)
-  - [Static Dispatch with `enum`](#static-dispatch-with-enum)
-  - [Compile-Time Polymorphism](#compile-time-polymorphism)
+- [Polymorphism in Rust](#polymorphism-in-rust)
+  - [Static Dispatch by `enum`](#static-dispatch-by-enum)
+  - [Static Dispatch by `generics` with trait](#static-dispatch-by-generics-with-trait)
+  - [Dynamic Dispatch `dyn` with trait object](#dynamic-dispatch-dyn-with-trait-object)
+  - [Static Dispatch by `enum` with trait](#static-dispatch-by-enum-with-trait)
 
 > Trait: 告诉编译器，某种类型具有哪些并且可以与其它类型共享的功能。**抽象地定义共享行为**，与其他语言中的interface有点类似
 
@@ -703,179 +704,320 @@ fn main() {
 }
 ```
 
-## polymorphism summary
+## Polymorphism in Rust
 
-3 methods for rust polymorphism
-- Using Trait Objects (Dynamic Dispatch)
-- Using Enums (Static Dispatch)
-- Using Generics (Compile-Time Polymorphism)
+4 methods for [polymorphism in Rust](https://www.brandons.me/blog/polymorphism-in-rust) 
+1. Static Dispatch by `enum`
+1. Static Dispatch by `generics` with trait
+1. Dynamic Dispatch `dyn` with trait object
+2. Static Dispatch by `enum` with trait
 
-### Dynamic Dispatch with `dyn`
+|              | Inline layout | No wasted memory | Mixed-type collections | Extensibile | Easy to write and maintain |
+| :----------: | :-----------: | :--------------: | :--------------------: | :---------: | :------------------------: |
+|     enum     |       ✅       |        ❌         |           ✅            |      ❌      |             ✅              |
+|   generics   |       ✅       |        ✅         |           ❌            |      ✅      |             ✅              |
+|     dyn      |       ❌       |        ✅         |           ✅            |      ✅      |             ✅              |
+| Frankenstein |       ✅       |        ✅         |           ✅            |      ✅      |             ❌              |
 
-> same as c++ **vtable**
-
-```rs
-// Define a trait
-trait Drawable {
-    fn draw(&self);
-}
-
-// Implement the trait for different structs
-struct Circle {
-    radius: f64,
-}
-
-impl Drawable for Circle {
-    fn draw(&self) {
-        println!("Drawing a circle with radius {}", self.radius);
-    }
-}
-
-struct Square {
-    side: f64,
-}
-
-impl Drawable for Square {
-    fn draw(&self) {
-        println!("Drawing a square with side {}", self.side);
-    }
-}
-
-fn main() {
-    // Create a vector of trait objects
-    let shapes: Vec<Box<dyn Drawable>> = vec![
-        Box::new(Circle { radius: 1.0 }),
-        Box::new(Square { side: 2.0 }),
-    ];
-
-    // Invoke the draw method on each shape
-    for shape in shapes.iter() {
-        shape.draw();
-    }
-}
-```
-
-### Static Dispatch with `enum`
+### Static Dispatch by `enum`
 
 > like c++ `std::variant`
 
 ```rs
-// Define a trait
-trait Drawable {
-    fn draw(&self);
+enum ShapeEnum {
+    Rectangle { width: f32, height: f32 },
+    Triangle { side: f32 },
+    Circle { radius: f32 },
 }
 
-// Implement the trait for different structs
-struct Circle {
-    radius: f64,
-}
-
-impl Drawable for Circle {
-    fn draw(&self) {
-        println!("Drawing a circle with radius {}", self.radius);
-    }
-}
-
-struct Square {
-    side: f64,
-}
-
-impl Drawable for Square {
-    fn draw(&self) {
-        println!("Drawing a square with side {}", self.side);
-    }
-}
-
-// Define an enum that can hold any Drawable type
-enum Shape {
-    Circle(Circle),
-    Square(Square),
-}
-
-impl Drawable for Shape {
-    fn draw(&self) {
+impl ShapeEnum {
+    pub fn perimeter(&self) -> f32 {
         match self {
-            Shape::Circle(c) => c.draw(),
-            Shape::Square(s) => s.draw(),
+            ShapeEnum::Rectangle { width, height } => width * 2.0 + height * 2.0,
+            ShapeEnum::Triangle { side } => side * 3.0,
+            ShapeEnum::Circle { radius } => radius * 2.0 * std::f32::consts::PI,
+        }
+    }
+
+    pub fn area(&self) -> f32 {
+        match self {
+            ShapeEnum::Rectangle { width, height } => width * height,
+            ShapeEnum::Triangle { side } => side * 0.5 * 3.0_f32.sqrt() / 2.0 * side,
+            ShapeEnum::Circle { radius } => radius * radius * std::f32::consts::PI,
         }
     }
 }
 
-fn main() {
-    // Create a vector of enums
-    let shapes: Vec<Shape> = vec![
-        Shape::Circle(Circle { radius: 1.0 }),
-        Shape::Square(Square { side: 2.0 }),
-    ];
+// usage
+fn print_area(shape: ShapeEnum) {
+    println!("{}", shape.area());
+}
 
-    // Invoke the draw method on each shape
+fn print_perimeters(shapes: Vec<ShapeEnum>) {
     for shape in shapes.iter() {
-        shape.draw();
+        println!("{}", shape.perimeter());
     }
+}
+
+fn main() {
+    let s1 = ShapeEnum::Rectangle {
+        width: 10.0,
+        height: 20.0,
+    };
+    print_area(s1);
+
+    let v1 = vec![
+        ShapeEnum::Rectangle {
+            width: 10.0,
+            height: 30.0,
+        },
+        ShapeEnum::Triangle { side: 20.0 },
+        ShapeEnum::Circle { radius: 10.0 },
+    ];
+    print_perimeters(v1);
 }
 ```
 
-### Compile-Time Polymorphism
+### Static Dispatch by `generics` with trait
 
-> like c++ **template**
+> like c++ concept
 
 ```rs
-// Define a trait
-trait Drawable {
-    fn draw(&self);
+trait Shape {
+    fn perimeter(&self) -> f32;
+    fn area(&self) -> f32;
 }
 
-// Implement the trait for different structs
+struct Rectangle {
+    pub width: f32,
+    pub height: f32,
+}
+struct Triangle {
+    pub side: f32,
+}
 struct Circle {
-    radius: f64,
+    pub radius: f32,
 }
 
-impl Drawable for Circle {
-    fn draw(&self) {
-        println!("Drawing a circle with radius {}", self.radius);
+impl Shape for Rectangle {
+    fn perimeter(&self) -> f32 {
+        self.width * 2.0 + self.height * 2.0
+    }
+    fn area(&self) -> f32 {
+        self.width * self.height
     }
 }
 
-struct Square {
-    side: f64,
-}
-
-impl Drawable for Square {
-    fn draw(&self) {
-        println!("Drawing a square with side {}", self.side);
+impl Shape for Triangle {
+    fn perimeter(&self) -> f32 {
+        self.side * 3.0
+    }
+    fn area(&self) -> f32 {
+        self.side * 0.5 * 3.0_f32.sqrt() / 2.0 * self.side
     }
 }
 
-// Define a generic container
-struct Canvas<T: Drawable> {
-    shapes: Vec<T>,
+impl Shape for Circle {
+    fn perimeter(&self) -> f32 {
+        self.radius * 2.0 * std::f32::consts::PI
+    }
+    fn area(&self) -> f32 {
+        self.radius * self.radius * std::f32::consts::PI
+    }
 }
 
-impl<T: Drawable> Canvas<T> {
-    fn new() -> Self {
-        Canvas { shapes: Vec::new() }
-    }
+// usage: Traits with generics
+fn print_area<S: Shape>(shape: S) {
+    println!("{}", shape.area());
+}
 
-    fn add_shape(&mut self, shape: T) {
-        self.shapes.push(shape);
-    }
-
-    fn draw_all(&self) {
-        for shape in &self.shapes {
-            shape.draw();
-        }
+fn print_perimeters<S: Shape>(shapes: Vec<S>) {
+    for shape in shapes.iter() {
+        println!("{}", shape.perimeter());
     }
 }
 
 fn main() {
-    let mut circle_canvas = Canvas::<Circle>::new();
-    circle_canvas.add_shape(Circle { radius: 1.0 });
-    // circle_canvas.add_shape(Square { side: 2.0 }); // This won't compile
+    let s1 = Rectangle {
+        width: 10.0,
+        height: 20.0,
+    };
+    print_area(s1);
 
-    circle_canvas.draw_all();
+    let v1 = vec![
+        Triangle { side: 10.0 },
+        Triangle { side: 20.0 },
+        Triangle { side: 30.0 },
+    ]; // same shape for vec
+    print_perimeters(v1);
+}
+```
 
-    let mut square_canvas = Canvas::<Square>::new();
-    square_canvas.add_shape(Square { side: 2.0 });
-    square_canvas.draw_all();
+### Dynamic Dispatch `dyn` with trait object
+
+> like c++ **vtable**
+
+```rs
+trait Shape {
+    fn perimeter(&self) -> f32;
+    fn area(&self) -> f32;
+}
+
+struct Rectangle {
+    pub width: f32,
+    pub height: f32,
+}
+struct Triangle {
+    pub side: f32,
+}
+struct Circle {
+    pub radius: f32,
+}
+
+impl Shape for Rectangle {
+    fn perimeter(&self) -> f32 {
+        self.width * 2.0 + self.height * 2.0
+    }
+    fn area(&self) -> f32 {
+        self.width * self.height
+    }
+}
+
+impl Shape for Triangle {
+    fn perimeter(&self) -> f32 {
+        self.side * 3.0
+    }
+    fn area(&self) -> f32 {
+        self.side * 0.5 * 3.0_f32.sqrt() / 2.0 * self.side
+    }
+}
+
+impl Shape for Circle {
+    fn perimeter(&self) -> f32 {
+        self.radius * 2.0 * std::f32::consts::PI
+    }
+    fn area(&self) -> f32 {
+        self.radius * self.radius * std::f32::consts::PI
+    }
+}
+
+// usage: Traits with dynamic dispatch
+fn print_area(shape: &dyn Shape) {
+    println!("{}", shape.area());
+}
+
+fn print_perimeters(shapes: Vec<&dyn Shape>) {
+    for shape in shapes.iter() {
+        println!("{}", shape.perimeter());
+    }
+}
+
+fn main() {
+    let s1 = Rectangle {
+        width: 10.0,
+        height: 20.0,
+    };
+    print_area(&s1);
+
+    let s2 = Circle { radius: 10.0 };
+    let s3 = Triangle { side: 20.0 };
+    let v1: Vec<&dyn Shape> = vec![&s1, &s2, &s3]; // same shape for vec
+    print_perimeters(v1);
+}
+```
+
+### Static Dispatch by `enum` with trait
+
+> frankenstein approach combined the `enum` and `trait`
+
+```rs
+enum ShapeEnum {
+    Rectangle(Rectangle),
+    Triangle(Triangle),
+    Circle(Circle),
+}
+
+struct Rectangle {
+    pub width: f32,
+    pub height: f32,
+}
+struct Triangle {
+    pub side: f32,
+}
+struct Circle {
+    pub radius: f32,
+}
+
+trait Shape {
+    fn perimeter(&self) -> f32;
+    fn area(&self) -> f32;
+}
+
+impl Shape for ShapeEnum {
+    fn perimeter(&self) -> f32 {
+        match self {
+            ShapeEnum::Rectangle(rect) => rect.perimeter(),
+            ShapeEnum::Triangle(tri) => tri.perimeter(),
+            ShapeEnum::Circle(circ) => circ.perimeter(),
+        }
+    }
+    fn area(&self) -> f32 {
+        match self {
+            ShapeEnum::Rectangle(rect) => rect.area(),
+            ShapeEnum::Triangle(tri) => tri.area(),
+            ShapeEnum::Circle(circ) => circ.area(),
+        }
+    }
+}
+
+impl Shape for Rectangle {
+    fn perimeter(&self) -> f32 {
+        self.width * 2.0 + self.height * 2.0
+    }
+    fn area(&self) -> f32 {
+        self.width * self.height
+    }
+}
+
+impl Shape for Triangle {
+    fn perimeter(&self) -> f32 {
+        self.side * 3.0
+    }
+    fn area(&self) -> f32 {
+        self.side * 0.5 * 3.0_f32.sqrt() / 2.0 * self.side
+    }
+}
+
+impl Shape for Circle {
+    fn perimeter(&self) -> f32 {
+        self.radius * 2.0 * std::f32::consts::PI
+    }
+    fn area(&self) -> f32 {
+        self.radius * self.radius * std::f32::consts::PI
+    }
+}
+
+// usage
+fn print_area(shape: ShapeEnum) {
+    println!("{}", shape.area());
+}
+
+fn print_perimeters(shapes: Vec<ShapeEnum>) {
+    for shape in shapes.iter() {
+        println!("{}", shape.perimeter());
+    }
+}
+
+fn main() {
+    let s1 = ShapeEnum::Rectangle(Rectangle {
+        width: 10.0,
+        height: 20.0,
+    });
+    print_area(s1);
+
+    let s2 = ShapeEnum::Circle(Circle { radius: 10.0 });
+    let s3 = ShapeEnum::Triangle(Triangle { side: 30.0 });
+    let v1 = vec![s2, s3];
+    print_perimeters(v1);
 }
 ```
