@@ -299,3 +299,33 @@ fn main() {
     display_array(arr);
 }
 ```
+
+```rust
+#[derive(Debug)]
+struct Student<const N: usize> {
+    values: [f64; N],
+}
+
+impl<const N: usize> Student<N> {
+    fn new() -> Self {
+        Self {
+            values: [f64::NAN; N],
+        }
+    }
+}
+
+fn main() {
+    let mut stu1 = Student {
+        values: [1.0, 2.0, 3.0],
+    };
+    stu1.values[0] = 100.0;
+    stu1.values[1] = 101.0;
+    stu1.values[2] = 102.0;
+    println!("{:?}", stu1);
+
+    let mut stu2 = Student::<4>::new();
+    stu2.values[0] = 200.0;
+    stu2.values[1] = 201.0;
+    println!("{:?}", stu2);
+}
+```
